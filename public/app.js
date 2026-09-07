@@ -317,7 +317,7 @@ function updateSdPie(sdList) {
 
 loadStats();
 
-setInterval(loadStats, 5000);
+setInterval(loadStats, 3000);
 
 async function checkPCStatus() {
   const statusElement = document.getElementById("pcStatus");
@@ -366,7 +366,7 @@ async function checkPCStatus() {
         setTimeout(() => {
           button.textContent = "⚡ Power On PC";
           checkPCStatus();
-        }, 3000);
+        }, 10000);
 
       } else {
         throw new Error(data.error || "Power-on failed");
@@ -380,7 +380,7 @@ async function checkPCStatus() {
       setTimeout(() => {
         button.textContent = "⚡ Power On PC";
         button.disabled = false;
-      }, 2000);
+      }, 10000);
     }
   }
 
@@ -388,7 +388,7 @@ async function checkPCStatus() {
   checkPCStatus();
 
   // Check every 5 seconds
-  setInterval(checkPCStatus, 5000);
+  setInterval(checkPCStatus, 3000);
 
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 
