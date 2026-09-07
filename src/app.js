@@ -43,6 +43,107 @@ function createApp() {
     }
   });
 
+  const { execFile } = require("child_process");
+
+let gpio17Busy = false;
+
+app.get("/gpio17", (req, res) => {
+    if (gpio17Busy) {
+        return res.status(409).json({
+            success: false,
+            error: "GPIO17 is already pulsing"
+        });
+    }
+
+    gpio17Busy = true;
+
+    execFile("pinctrl", ["set", "17", "op", "dh"], (error) => {
+        if (error) {
+            gpio17Busy = false;
+            console.error(error);
+            return res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+
+        setTimeout(() => {
+            execFile("pinctrl", ["set", "17", "op", "dl"], (error) => {
+                gpio17Busy = false;
+
+                if (error) {
+                    console.error(error);
+                    return res.status(500).json({
+                        success: false,
+                        error: error.message
+                    });
+                }
+
+                res.json({
+                    success: true,
+                    gpio: 17,
+                    pulse_ms: 500,
+                    state: "LOW"
+                });
+            });
+        }, 500);
+    });
+});
+
+const { execFile } = require("child_process");
+
+app.get("/api/tailscale/netrunner", (req, res) => {
+    execFile("tailscale", ["status", "--json"], (error, stdout, stderr) => {
+        if (error) {
+            console.error("Tailscale error:", error);
+            return res.status(500).json({
+                success: false,
+                error: "Unable to check Tailscale status"
+            });
+        }
+
+        try {
+            const status = JSON.parse(stdout);
+
+            const peers = Object.values(status.Peer || {});
+
+            const netrunner = peers.find(peer => {
+                return (
+                    peer.HostName?.toLowerCase() === "netrunner" ||
+                    peer.DNSName?.toLowerCase().startsWith("netrunner.")
+                );
+            });
+
+            if (!netrunner) {
+                return res.json({
+                    success: true,
+                    device: "netrunner",
+                    connected: false,
+                    found: false
+                });
+            }
+
+            res.json({
+                success: true,
+                device: "netrunner",
+                connected: netrunner.Online === true,
+                found: true,
+                ip: netrunner.TailscaleIPs?.[0] || null,
+                hostname: netrunner.HostName,
+                lastSeen: netrunner.LastSeen || null
+            });
+
+        } catch (parseError) {
+            console.error("Tailscale JSON parse error:", parseError);
+
+            res.status(500).json({
+                success: false,
+                error: "Invalid Tailscale response"
+            });
+        }
+    });
+});
+
   app.get("/api/history", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {

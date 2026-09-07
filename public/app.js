@@ -319,6 +319,70 @@ loadStats();
 
 setInterval(loadStats, 5000);
 
+async function checkPCStatus() {
+    const statusElement = document.getElementById("pcStatus");
+    const button = document.getElementById("powerOnBtn");
+
+    try {
+      const response = await fetch("/api/tailscale/netrunner");
+      const data = await response.json();
+
+      if (data.connected) {
+        statusElement.textContent = "🟢 Connected";
+        button.disabled = true;
+      } else {
+        statusElement.textContent = "🔴 Disconnected";
+        button.disabled = false;
+      }
+
+    } catch (error) {
+      console.error("PC status error:", error);
+      statusElement.textContent = "⚠️ Unknown";
+      button.disabled = false;
+    }
+  }
+
+  async function powerOnPC() {
+    const button = document.getElementById("powerOnBtn");
+
+    button.disabled = true;
+    button.textContent = "⚡ Powering On...";
+
+    try {
+      const response = await fetch("/api/gpio/17/pulse");
+      const data = await response.json();
+
+      if (data.success) {
+        button.textContent = "✅ Power Signal Sent";
+
+        // Check Tailscale status again after 3 seconds
+        setTimeout(() => {
+          button.textContent = "⚡ Power On PC";
+          checkPCStatus();
+        }, 3000);
+
+      } else {
+        throw new Error(data.error || "Power-on failed");
+      }
+
+    } catch (error) {
+      console.error("Power on error:", error);
+
+      button.textContent = "❌ Failed";
+
+      setTimeout(() => {
+        button.textContent = "⚡ Power On PC";
+        button.disabled = false;
+      }, 2000);
+    }
+  }
+
+  // Check immediately
+  checkPCStatus();
+
+  // Check every 5 seconds
+  setInterval(checkPCStatus, 5000);
+
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 
 function makeLineChart(ctx, label, datasets) {
