@@ -362,12 +362,6 @@ async function checkPCStatus() {
       if (data.success) {
         button.textContent = "✅ Power Signal Sent";
 
-        // Check Tailscale status again after 3 seconds
-        setTimeout(() => {
-          button.textContent = "⚡ Power On PC";
-          checkPCStatus();
-        }, 10000);
-
       } else {
         throw new Error(data.error || "Power-on failed");
       }
@@ -376,11 +370,6 @@ async function checkPCStatus() {
       console.error("Power on error:", error);
 
       button.textContent = "❌ Failed";
-
-      setTimeout(() => {
-        button.textContent = "⚡ Power On PC";
-        button.disabled = false;
-      }, 10000);
     }
   }
 
