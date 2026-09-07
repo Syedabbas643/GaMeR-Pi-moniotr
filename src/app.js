@@ -90,8 +90,6 @@ app.get("/gpio17", (req, res) => {
     });
 });
 
-const { execFile } = require("child_process");
-
 app.get("/api/tailscale/netrunner", (req, res) => {
     execFile("tailscale", ["status", "--json"], (error, stdout, stderr) => {
         if (error) {
