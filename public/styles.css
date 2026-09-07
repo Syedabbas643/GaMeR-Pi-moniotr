@@ -1,0 +1,497 @@
+/* ===================================
+   System Monitor - Responsive Styles
+   =================================== */
+
+/* CSS Variables */
+:root {
+  --bg-primary: #111;
+  --bg-card: #1a1a1a;
+  --bg-card-hover: #222;
+  --text-primary: #eee;
+  --text-secondary: #aaa;
+  --text-muted: #777;
+  --accent-green: #4caf50;
+  --accent-blue: #03a9f4;
+  --accent-yellow: #ffc107;
+  --accent-red: #e91e63;
+  --border-color: #333;
+  --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+  /* Font sizes - Desktop */
+  --font-size-h1: 2rem;
+  --font-size-h3: 1.2rem;
+  --font-size-body: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-metric: 1.5rem;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Card */
+  --card-radius: 12px;
+  --card-padding: 1.25rem;
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+}
+
+/* Main Title */
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-blue) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Cards Layout - Desktop Grid */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card h3 {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-xs);
+}
+
+/* Card Content */
+.card-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+/* Metrics */
+.metric {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) 0;
+}
+
+.metric-label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.metric-value {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 500;
+}
+
+.metric-wide {
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Memory Table */
+.mem-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mem-table-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+.mem-table-row:first-child {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mem-table-row > div {
+  text-align: center;
+}
+
+.mem-table-row > div:first-child {
+  text-align: left;
+}
+
+/* Alerts */
+.alert-ok {
+  color: var(--accent-green);
+}
+
+.alert-warn {
+  color: var(--accent-yellow);
+}
+
+.alert-crit {
+  color: var(--accent-red);
+}
+
+/* Network Interface Cards */
+.network-interface {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  border: 1px solid var(--border-color);
+  font-size: var(--font-size-small);
+}
+
+.network-interface strong {
+  font-size: var(--font-size-body);
+  color: var(--accent-blue);
+}
+
+/* IP List */
+.ip-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ip-item {
+  font-size: var(--font-size-small);
+  font-family: "Monaco", "Menlo", monospace;
+  background: var(--bg-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+/* Throttling Status */
+.throttling-normal {
+  color: var(--accent-green);
+}
+
+.throttling-warning {
+  color: var(--accent-yellow);
+}
+
+.throttling-error {
+  color: var(--accent-red);
+}
+
+/* Charts */
+.chart-container-pie {
+  width: 150px;
+  height: 150px;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Links */
+.link-export {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-size: var(--font-size-small);
+  transition: color 0.2s ease;
+}
+
+.link-export:hover {
+  color: var(--accent-green);
+  text-decoration: underline;
+}
+
+/* ===================================
+   Desktop Layout (2 column grid)
+   =================================== */
+@media (min-width: 768px) {
+  body {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    align-content: start;
+  }
+
+  h1 {
+    grid-column: 1 / -1;
+  }
+
+  /* Make certain cards span full width */
+
+  .card:has(.ip-addresses),
+  .card:has(.mem-table),
+  .card:has(.transmission-stats),
+  .card:has(#throttling),
+  .card:has(#chart-cpu) {
+    grid-column: 1 / -1;
+  }
+
+  .card-content {
+    flex-wrap: nowrap;
+  }
+
+  /* Charts side by side on desktop */
+  .card:has(#chart-cpu) .card-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+  }
+
+  .metric-wide {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* ===================================
+   Tablet/Small Desktop
+   =================================== */
+@media (max-width: 1024px) and (min-width: 768px) {
+  :root {
+    --font-size-h1: 1.75rem;
+    --font-size-h3: 1.1rem;
+    --font-size-body: 0.95rem;
+    --font-size-small: 0.85rem;
+    --card-padding: 1rem;
+  }
+}
+
+/* ===================================
+   Mobile Styles
+   =================================== */
+@media (max-width: 767px) {
+  :root {
+    /* Adjusted font sizes for mobile */
+    --font-size-h1: 1.5rem;
+    --font-size-h3: 1rem;
+    --font-size-body: 0.9rem;
+    --font-size-small: 0.8rem;
+    --font-size-metric: 1.1rem;
+
+    /* Reduced spacing for mobile */
+    --spacing-lg: 1rem;
+    --spacing-md: 0.75rem;
+    --card-padding: 1rem;
+    --card-radius: 10px;
+  }
+
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    padding: var(--spacing-md);
+    display: block;
+  }
+
+  h1 {
+    font-size: var(--font-size-h1);
+    margin-bottom: var(--spacing-md);
+  }
+
+  /* Cards stacked on mobile */
+  .card {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .card h3 {
+    font-size: var(--font-size-h3);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Card content vertical on mobile */
+  .card-content {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  /* Metrics more compact on mobile */
+  .metric {
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--spacing-xs) 0;
+  }
+
+  .metric:last-child {
+    border-bottom: none;
+  }
+
+  .metric-label {
+    flex-shrink: 0;
+    font-size: var(--font-size-small);
+  }
+
+  .metric-value {
+    font-size: var(--font-size-body);
+    text-align: right;
+    word-break: break-all;
+  }
+
+  .metric-wide {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .metric-wide .metric-label {
+    margin-bottom: var(--spacing-xs);
+  }
+
+  /* Memory Table - Mobile optimized */
+  .mem-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(-1 * var(--card-padding));
+    padding: 0 var(--card-padding);
+  }
+
+  .mem-table-row {
+    grid-template-columns: minmax(50px, auto) repeat(6, minmax(60px, 1fr));
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  /* Network cards full width */
+  .network-interface {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-small);
+  }
+
+  .network-interface strong {
+    font-size: var(--font-size-body);
+    display: block;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  /* IP items smaller on mobile */
+  .ip-item {
+    font-size: 0.75rem;
+    padding: var(--spacing-xs);
+  }
+
+  /* Charts stacked vertically on mobile */
+  .chart-container-pie {
+    width: 120px;
+    height: 120px;
+    margin: var(--spacing-sm) auto;
+  }
+
+  /* Historical charts full width and stacked */
+  canvas {
+    width: 100% !important;
+    max-height: 200px;
+  }
+
+  /* Link styles for touch */
+  .link-export {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--bg-primary);
+    border-radius: 4px;
+    margin-top: var(--spacing-xs);
+  }
+}
+
+/* ===================================
+   Very Small Mobile
+   =================================== */
+@media (max-width: 375px) {
+  :root {
+    --font-size-h1: 1.25rem;
+    --font-size-h3: 0.95rem;
+    --font-size-body: 0.85rem;
+    --font-size-small: 0.75rem;
+    --card-padding: 0.75rem;
+  }
+
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    padding: var(--spacing-sm);
+  }
+
+  .mem-table-row {
+    font-size: 0.65rem;
+  }
+
+  .chart-container-pie {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* ===================================
+   Print Styles
+   =================================== */
+@media print {
+  body {
+    background: white;
+    color: black;
+    display: block;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+}
+
+/* ===================================
+   Accessibility
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #666;
+    --text-secondary: #ccc;
+  }
+}

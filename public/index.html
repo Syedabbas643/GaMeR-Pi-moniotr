@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Monitor</title>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%23111%22/%3E%3Cpath%20d%3D%22M14%2040%20L24%2030%20L32%2038%20L44%2022%20L50%2028%22%20stroke%3D%22%234CAF50%22%20stroke-width%3D%226%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2240%22%20r%3D%223%22%20fill%3D%22%234CAF50%22/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <h1>📊 Raspberry Pi Monitor</h1>
+
+  <div class="card">
+    <h3>⏱️ Uptime</h3>
+    <div class="metric-value" id="uptime"></div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 CPU Load Average</h3>
+    <div class="card-content">
+      <div class="metric">
+        <div class="metric-label">1 minute:</div>
+        <div class="metric-value" id="load1min"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">5 minutes:</div>
+        <div class="metric-value" id="load5min"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">15 minutes:</div>
+        <div class="metric-value" id="load15min"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📑 Memoria</h3>
+    <div class="mem-table">
+      <div class="mem-table-row">
+        <strong></strong>
+        <strong>Total</strong>
+        <strong>Usada</strong>
+        <strong>Libre</strong>
+        <strong>Shared</strong>
+        <strong>Buff/Cache</strong>
+        <strong>Available</strong>
+      </div>
+      <div class="mem-table-row" id="mem-table-row"></div>
+      <div class="mem-table-row" id="swap-table-row"></div>
+      <div class="metric-label" id="mem-alert"></div>
+      <div class="metric-label">
+        <a href="/api/export/memory.csv?rangeSeconds=86400" class="link-export">Export CSV (24h)</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>️ HDD</h3>
+    <div class="card-content">
+      <div id="storage-hdd" class="metric"></div>
+      <div class="metric">
+        <div class="chart-container-pie" style="margin: 0 auto;">
+          <canvas id="chart-hdd-pie"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📀 SD</h3>
+    <div class="card-content">
+      <div id="storage-sd" class="metric"></div>
+      <div class="metric">
+        <div class="chart-container-pie" style="margin: 0 auto;">
+          <canvas id="chart-sd-pie"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌡️ Temperature</h3>
+    <div class="card-content">
+      <div class="metric">
+        <div class="metric-label">CPU:</div>
+        <div class="metric-value" id="temp-cpu"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">GPU:</div>
+        <div class="metric-value" id="temp-gpu"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌐 Network Usage</h3>
+    <div id="network"></div>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Throttling Status</h3>
+    <div class="metric-value" id="throttling"></div>
+  </div>
+
+  <div class="card">
+    <h3>📍 IP Addresses</h3>
+    <div class="card-content ip-addresses">
+      <div class="metric">
+        <div class="metric-label">Public IP:</div>
+        <div class="metric-value" id="public-ip"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Local IPv4:</div>
+        <div class="ip-list" id="local-ipv4"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Local IPv6:</div>
+        <div class="ip-list" id="local-ipv6"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧲 Transmission</h3>
+    <div class="card-content transmission-stats">
+      <div class="metric">
+        <div class="metric-label">Estado:</div>
+        <div class="metric-value" id="transmission-status"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">↓ Velocidad global:</div>
+        <div class="metric-value" id="transmission-download"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">↑ Velocidad global:</div>
+        <div class="metric-value" id="transmission-upload"></div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Torrents activos:</div>
+        <div class="metric-value" id="transmission-active-count"></div>
+      </div>
+    </div>
+    <div id="transmission-torrents"></div>
+  </div>
+  <div class="card">
+    <h3>📈 Históricos</h3>
+    <div class="card-content">
+      <div class="metric metric-wide">
+        <div class="metric-label">CPU Load (1m)</div>
+        <canvas id="chart-cpu"></canvas>
+      </div>
+      <div class="metric metric-wide">
+        <div class="metric-label">% RAM usada</div>
+        <canvas id="chart-ram"></canvas>
+      </div>
+      <div class="metric metric-wide">
+        <div class="metric-label">% Swap usada</div>
+        <canvas id="chart-swap"></canvas>
+      </div>
+
+      <div class="metric metric-wide">
+        <div class="metric-label">Red ↓/↑ (bps)</div>
+        <canvas id="chart-net"></canvas>
+      </div>
+      <div class="metric metric-wide">
+        <div class="metric-label">Transmission ↓/↑ (bps)</div>
+        <canvas id="chart-tx"></canvas>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
