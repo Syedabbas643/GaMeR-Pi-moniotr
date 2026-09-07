@@ -320,27 +320,34 @@ loadStats();
 setInterval(loadStats, 5000);
 
 async function checkPCStatus() {
-    const statusElement = document.getElementById("pcStatus");
-    const button = document.getElementById("powerOnBtn");
+  const statusElement = document.getElementById("pcStatus");
+  const button = document.getElementById("powerOnBtn");
 
-    try {
-      const response = await fetch("/api/tailscale/netrunner");
-      const data = await response.json();
+  try {
+    const response = await fetch("/api/tailscale/netrunner");
+    const data = await response.json();
 
-      if (data.connected) {
-        statusElement.textContent = "🟢 Connected";
-        button.disabled = true;
-      } else {
-        statusElement.textContent = "🔴 Disconnected";
-        button.disabled = false;
-      }
+    if (data.connected) {
+      statusElement.textContent = "🟢 Connected";
 
-    } catch (error) {
-      console.error("PC status error:", error);
-      statusElement.textContent = "⚠️ Unknown";
       button.disabled = false;
+      button.textContent = "⏻ Power Off PC";
+
+    } else {
+      statusElement.textContent = "🔴 Disconnected";
+
+      button.disabled = false;
+      button.textContent = "⚡ Power On PC";
     }
+
+  } catch (error) {
+    console.error("PC status error:", error);
+
+    statusElement.textContent = "⚠️ Unknown";
+    button.disabled = false;
+    button.textContent = "⚡ Power On PC";
   }
+}
 
   async function powerOnPC() {
     const button = document.getElementById("powerOnBtn");
@@ -349,7 +356,7 @@ async function checkPCStatus() {
     button.textContent = "⚡ Powering On...";
 
     try {
-      const response = await fetch("/api/gpio/17/pulse");
+      const response = await fetch("/gpio17");
       const data = await response.json();
 
       if (data.success) {
