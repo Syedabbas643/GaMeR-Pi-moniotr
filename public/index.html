@@ -21,31 +21,27 @@
   <main id="page-system" class="page active">
 
     <div class="card">
-      <h3>🖥️ PC Status</h3>
+      <h3>📑 Memory</h3>
 
-      <div class="card-content pc-control">
-        <div class="metric">
-          <div class="metric-label">Connection:</div>
-          <div class="metric-value" id="pcStatus">Checking...</div>
-        </div>
-
-        <button id="powerOnBtn" onclick="powerOnPC()">
-          ⚡ Power On PC
-        </button>
+      <div class="card-content">
+        <div class="metric" id="mem-table-row"></div>
       </div>
     </div>
 
-        <div class="card">
+    <div class="card">
+      <h3>💾 HDD</h3>
+
+      <div class="card-content">
+        <div id="storage-hdd" class="metric"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>🌐 Network Usage</h3>
       <div id="network"></div>
     </div>
 
     <div class="card">
-      <h3>⏱️ Uptime</h3>
-      <div class="metric-value" id="uptime"></div>
-    </div>
-
-        <div class="card">
       <h3>🌡️ Temperature</h3>
 
       <div class="card-content">
@@ -64,23 +60,16 @@
     </div>
 
     <div class="card">
-      <h3>📑 Memory</h3>
-
-      <div class="card-content">
-        <div class="metric" id="mem-table-row"></div>
-      </div>
+      <h3>⏱️ Uptime</h3>
+      <div class="metric-value" id="uptime"></div>
     </div>
 
     <div class="card">
-      <h3>💾 HDD</h3>
-
-      <div class="card-content">
-        <div id="storage-hdd" class="metric"></div>
-        <canvas id="chart-hdd-pie"></canvas>
-      </div>
+      <h3>⚡ Throttling Status</h3>
+      <div class="metric-value" id="throttling"></div>
     </div>
 
-        <div class="card">
+    <div class="card">
       <h3>📍 IP Addresses</h3>
 
       <div class="card-content ip-addresses">
@@ -98,23 +87,51 @@
       </div>
     </div>
 
-        <div class="card">
-      <h3>⚡ Throttling Status</h3>
-      <div class="metric-value" id="throttling"></div>
+
+
+
+  </main>
+
+
+<!-- ==================== -->
+<!-- PAGE: SSH -->
+<!-- ==================== -->
+
+<main id="page-network" class="page">
+
+  <div class="card ssh-card">
+
+    <h3>💻 SSH Terminal</h3>
+
+    <div class="terminal" id="terminal">
+
+      <div class="terminal-output" id="terminal-output">
+        <div>GaMeR-SerVer SSH Terminal</div>
+        <div>Connecting...</div>
+      </div>
+
+      <div class="terminal-input-line">
+
+        <span class="terminal-prompt" id="terminal-prompt">
+          $
+        </span>
+
+        <input
+          type="text"
+          id="terminal-input"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+
+      </div>
+
     </div>
 
+  </div>
 
-  </main>
-
-
-  <!-- ==================== -->
-  <!-- PAGE: NETWORK -->
-  <!-- ==================== -->
-  <main id="page-network" class="page">
-
-
-
-  </main>
+</main>
 
 
   <!-- ==================== -->
@@ -122,16 +139,19 @@
   <!-- ==================== -->
   <main id="page-more" class="page">
 
-
-
     <div class="card">
-      <h3>ℹ️ System Information</h3>
+      <h3>🖥️ PC Status</h3>
 
-      <div class="metric">
-        <div class="metric-label">Server:</div>
-        <div class="metric-value">GaMeR-SerVer</div>
+      <div class="card-content pc-control">
+        <div class="metric">
+          <div class="metric-label">Connection:</div>
+          <div class="metric-value" id="pcStatus">Checking...</div>
+        </div>
+
+        <button id="powerOnBtn" onclick="powerOnPC()">
+          ⚡ Power On PC
+        </button>
       </div>
-
     </div>
 
   </main>

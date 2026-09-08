@@ -360,7 +360,6 @@ function showPage(pageName) {
   );
 }
 
-
 /* Navigation click */
 
 navItems.forEach(item => {
@@ -374,7 +373,6 @@ navItems.forEach(item => {
   });
 
 });
-
 
 /* Browser back / forward */
 
@@ -410,7 +408,6 @@ function showPageWithoutHistory(pageName) {
   });
 
 }
-
 
 /* Open correct page when loading */
 
