@@ -50,7 +50,7 @@ async function loadStats() {
         <div class="network-interface">
           <strong>RAM</strong><br>
           <span class="metric-label">Total:</span> ${total}<br>
-          <span class="metric-label">Used:</span> ${usedMB}<br>
+          <span class="metric-label">Used:</span> ${usedMB} MB<br>
           <span class="metric-label">Usage:</span> ${usedPercent}%<br>
           <span class="metric-label">Available:</span> ${available}
         </div>
@@ -247,7 +247,7 @@ async function checkPCStatus() {
       statusElement.textContent = "🟢 Connected";
 
       button.disabled = false;
-      button.textContent = "⏻ Power Off PC";
+      button.textContent = "\u23FB Power Off PC";
 
     } else {
       statusElement.textContent = "🔴 Disconnected";
