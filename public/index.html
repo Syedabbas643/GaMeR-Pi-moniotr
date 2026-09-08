@@ -40,7 +40,7 @@
 <div class="card">
   <h3>📑 Memory</h3>
 
-  <div class="">
+  <div class="card-content">
 
     <!-- Header -->
     <div class="mem-table-row">
@@ -61,11 +61,10 @@
     <h3>💾 HDD</h3>
     <div class="card-content">
       <div id="storage-hdd" class="metric"></div>
-      <canvas id="chart-hdd-pie"></canvas>
       <div class="metric">
-        <!-- <div class="chart-container-pie" style="margin: 0 auto;">
-
-        </div> -->
+        <div class="chart-container-pie" style="margin: 0 auto;">
+            <canvas id="chart-hdd-pie"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -107,36 +106,6 @@
       </div>
     </div>
   </div>
-
-  <!-- <div class="card">
-    <h3>📈 History</h3>
-    <div class="card-content">
-      <div class="metric metric-wide">
-        <div class="metric-label">CPU Load (1m)</div>
-        <canvas id="chart-cpu"></canvas>
-      </div>
-
-      <div class="metric metric-wide">
-        <div class="metric-label">% RAM Used</div>
-        <canvas id="chart-ram"></canvas>
-      </div>
-
-      <div class="metric metric-wide">
-        <div class="metric-label">% Swap Used</div>
-        <canvas id="chart-swap"></canvas>
-      </div>
-
-      <div class="metric metric-wide">
-        <div class="metric-label">Network ↓/↑ (bps)</div>
-        <canvas id="chart-net"></canvas>
-      </div>
-
-      <div class="metric metric-wide">
-        <div class="metric-label">Transmission ↓/↑ (bps)</div>
-        <canvas id="chart-tx"></canvas>
-      </div>
-    </div>
-  </div> -->
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>

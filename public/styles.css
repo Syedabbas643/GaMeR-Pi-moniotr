@@ -337,14 +337,26 @@ canvas {
   }
 
   body {
-    padding: var(--spacing-md);
-    display: block;
-  }
+  padding: var(--spacing-md);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+  align-content: start;
+}
 
   h1 {
     font-size: var(--font-size-h1);
     margin-bottom: var(--spacing-md);
   }
+
+   /* Full-width cards */
+  .card:has(.ip-addresses),
+  .card:has(.mem-table),
+  .card:has(#throttling),
+  .card:has(#chart-cpu) {
+    grid-column: 1 / -1;
+  }
+
 
   /* Cards stacked on mobile */
   .card {
