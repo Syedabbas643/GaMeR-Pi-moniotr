@@ -48,7 +48,6 @@ async function loadStats() {
 
       memRow.innerHTML = `
         <div class="network-interface">
-          <strong>RAM</strong><br>
           <span class="metric-label">Total:</span> ${total}<br>
           <span class="metric-label">Used:</span> ${usedMB} MB<br>
           <span class="metric-label">Usage:</span> ${usedPercent}%<br>
@@ -72,7 +71,6 @@ async function loadStats() {
         const cls = st === "crit" ? "alert-crit" : (st === "warn" ? "alert-warn" : "alert-ok");
         return `
           <div class="network-interface">
-            <strong>${d.mount || d.fs}</strong><br>
             <span class="metric-label">Directory:</span> ${d.fs}<br>
             <span class="metric-label">Used %:</span> <span class="${cls}">${d.usePercent}%</span><br>
             <span class="metric-label">Total:</span> ${d.total}<br>
@@ -99,7 +97,6 @@ async function loadStats() {
         const ifaceTotals = totals.perInterface ? totals.perInterface[interfaceName] : null;
         networkHTML += `
           <div class="network-interface">
-            <strong>${interfaceName}:</strong><br>
             <span class="metric-label">↓ Speed:</span> ${stats.rx}<br>
             <span class="metric-label">↑ Speed:</span> ${stats.tx}<br>
             ${ifaceTotals ? `
@@ -247,7 +244,7 @@ async function checkPCStatus() {
       statusElement.textContent = "🟢 Connected";
 
       button.disabled = false;
-      button.textContent = "\u23FB Power Off PC";
+      button.innerHTML = "&#x23FB; Power Off PC";
 
     } else {
       statusElement.textContent = "🔴 Disconnected";
