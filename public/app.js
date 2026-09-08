@@ -45,19 +45,48 @@ async function loadStats() {
       const usedPercent = totalMB > 0
         ? ((usedMB / totalMB) * 100).toFixed(1)
         : "0.0";
+      const usage = Number(usedPercent);
+
+      const usageClass =
+        usage >= 80
+      ? "alert-crit"
+      : usage >= 50
+        ? "alert-warn"
+        : "alert-ok";
 
       memRow.innerHTML = `
         <div class="network-interface">
           <span class="metric-label">Total:</span> ${total}<br>
           <span class="metric-label">Used:</span> ${usedMB} MB<br>
-          <span class="metric-label">Usage:</span> ${usedPercent}%<br>
+          <span class="metric-label">Usage:</span>
+          <span class="${usageClass}">${usedPercent}%</span><br>
           <span class="metric-label">Available:</span> ${available}
         </div>
       `;
     }
 
-    document.getElementById("temp-cpu").textContent = data.temperature.cpu;
-    document.getElementById("temp-gpu").textContent = data.temperature.gpu;
+    const cpuTemp = Number(data.temperature.cpu);
+    const gpuTemp = Number(data.temperature.gpu);
+
+    const cpuClass =
+      cpuTemp > 75
+        ? "alert-crit"
+        : cpuTemp > 55
+          ? "alert-warn"
+          : "alert-ok";
+
+    const gpuClass =
+      gpuTemp > 75
+        ? "alert-crit"
+        : gpuTemp > 55
+          ? "alert-warn"
+          : "alert-ok";
+
+    document.getElementById("temp-cpu").innerHTML =
+      `<span class="${cpuClass}">${data.temperature.cpu}</span>`;
+
+    document.getElementById("temp-gpu").innerHTML =
+      `<span class="${gpuClass}">${data.temperature.gpu}</span>`;
 
     function renderStorage(list, containerId) {
       const el = document.getElementById(containerId);
