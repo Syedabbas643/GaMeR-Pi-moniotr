@@ -345,8 +345,7 @@ canvas {
 }
 
   h1 {
-    font-size: var(--font-size-h1);
-    margin-bottom: var(--spacing-md);
+    grid-column: 1 / -1;
     width: 100%;
   }
 

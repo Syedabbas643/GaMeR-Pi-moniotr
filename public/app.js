@@ -36,11 +36,11 @@ async function loadStats() {
       const mem = data.memory || {};
 
       const total = fmtMB(mem.total);
-      const used = fmtMB(mem.used);
       const available = fmtMB(mem.available);
 
       const totalMB = Number(mem.total) || 0;
-      const usedMB = Number(mem.used) || 0;
+      const availableMB = Number(mem.available) || 0;
+      const usedMB = Math.max(0, totalMB - availableMB);
 
       const usedPercent = totalMB > 0
         ? ((usedMB / totalMB) * 100).toFixed(1)
@@ -50,7 +50,7 @@ async function loadStats() {
         <div class="network-interface">
           <strong>RAM</strong><br>
           <span class="metric-label">Total:</span> ${total}<br>
-          <span class="metric-label">Used:</span> ${used}<br>
+          <span class="metric-label">Used:</span> ${usedMB}<br>
           <span class="metric-label">Usage:</span> ${usedPercent}%<br>
           <span class="metric-label">Available:</span> ${available}
         </div>
