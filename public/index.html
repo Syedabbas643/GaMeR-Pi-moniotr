@@ -11,7 +11,7 @@
 </head>
 
 <body>
-  <h1>📊 GaMeR</h1>
+  <h1>GaMeR-SerVer</h1>
 
 <div class="card">
   <h3>🖥️ PC Status</h3>
@@ -37,46 +37,25 @@
     <div class="metric-value" id="uptime"></div>
   </div>
 
-  <div class="card">
-    <h3>🧠 CPU Load Average</h3>
-    <div class="card-content">
-      <div class="metric">
-        <div class="metric-label">1 minute:</div>
-        <div class="metric-value" id="load1min"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">5 minutes:</div>
-        <div class="metric-value" id="load5min"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">15 minutes:</div>
-        <div class="metric-value" id="load15min"></div>
-      </div>
-    </div>
-  </div>
+<div class="card">
+  <h3>📑 Memory</h3>
 
-  <div class="card">
-    <h3>📑 Memory</h3>
-    <div class="mem-table">
-      <div class="mem-table-row">
-        <strong></strong>
-        <strong>Total</strong>
-        <strong>Used</strong>
-        <strong>Free</strong>
-        <strong>Shared</strong>
-        <strong>Buff/Cache</strong>
-        <strong>Available</strong>
-      </div>
-      <div class="mem-table-row" id="mem-table-row"></div>
-      <div class="mem-table-row" id="swap-table-row"></div>
-      <div class="metric-label" id="mem-alert"></div>
-      <div class="metric-label">
-        <a href="/api/export/memory.csv?rangeSeconds=86400" class="link-export">
-          Export CSV (24h)
-        </a>
-      </div>
+  <div class="mem-table">
+
+    <!-- Header -->
+    <div class="mem-table-row">
+      <strong></strong>
+      <strong>Total</strong>
+      <strong>Used</strong>
+      <strong>Used %</strong>
+      <strong>Available</strong>
     </div>
+
+    <!-- RAM -->
+    <div class="mem-table-row" id="mem-table-row"></div>
+
   </div>
+</div>
 
   <div class="card">
     <h3>💾 HDD</h3>
@@ -85,18 +64,6 @@
       <div class="metric">
         <div class="chart-container-pie" style="margin: 0 auto;">
           <canvas id="chart-hdd-pie"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>📀 SD</h3>
-    <div class="card-content">
-      <div id="storage-sd" class="metric"></div>
-      <div class="metric">
-        <div class="chart-container-pie" style="margin: 0 auto;">
-          <canvas id="chart-sd-pie"></canvas>
         </div>
       </div>
     </div>
@@ -137,37 +104,10 @@
         <div class="metric-label">Local IPv4:</div>
         <div class="ip-list" id="local-ipv4"></div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Local IPv6:</div>
-        <div class="ip-list" id="local-ipv6"></div>
-      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>🧲 Transmission</h3>
-    <div class="card-content transmission-stats">
-      <div class="metric">
-        <div class="metric-label">Status:</div>
-        <div class="metric-value" id="transmission-status"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">↓ Global Download:</div>
-        <div class="metric-value" id="transmission-download"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">↑ Global Upload:</div>
-        <div class="metric-value" id="transmission-upload"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Active Torrents:</div>
-        <div class="metric-value" id="transmission-active-count"></div>
-      </div>
-    </div>
-    <div id="transmission-torrents"></div>
-  </div>
-
-  <div class="card">
+  <!-- <div class="card">
     <h3>📈 History</h3>
     <div class="card-content">
       <div class="metric metric-wide">
@@ -195,7 +135,7 @@
         <canvas id="chart-tx"></canvas>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>
