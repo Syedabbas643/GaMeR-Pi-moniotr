@@ -244,7 +244,7 @@ async function checkPCStatus() {
       statusElement.textContent = "🟢 Connected";
 
       button.disabled = false;
-      button.innerHTML = "&#x23FB; Power Off PC";
+      button.innerHTML = "⚡ Power Off PC";
 
     } else {
       statusElement.textContent = "🔴 Disconnected";
