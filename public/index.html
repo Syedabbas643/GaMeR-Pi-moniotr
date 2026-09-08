@@ -11,90 +11,159 @@
 </head>
 
 <body>
+
+  <!-- Main heading -->
   <h1>GaMeR-SerVer</h1>
 
-<div class="card">
-  <h3>🖥️ PC Status</h3>
-
-  <div class="card-content pc-control">
-    
-    <!-- Row 1 -->
-    <div class="metric">
-      <div class="metric-value" id="pcStatus">Checking...</div>
-    </div>
-
-    <!-- Row 2 -->
-    <button id="powerOnBtn" onclick="powerOnPC()">
-      ⚡ Power On PC
-    </button>
-
-  </div>
-</div>
-
-<div class="card">
-  <h3>📑 Memory</h3>
-
-  <div class="card-content">
-    <div class="metric" id="mem-table-row"></div>
-  </div>
-</div>
-
-  <div class="card">
-    <h3>⏱️ Uptime</h3>
-    <div class="metric-value" id="uptime"></div>
-  </div>
+  <!-- ==================== -->
+  <!-- PAGE: SYSTEM -->
+  <!-- ==================== -->
+  <main id="page-system" class="page active">
 
     <div class="card">
-    <h3>🌡️ Temperature</h3>
-    <div class="card-content">
-      <div class="metric">
-        <div class="metric-label">CPU:</div>
-        <div class="metric-value" id="temp-cpu"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">GPU:</div>
-        <div class="metric-value" id="temp-gpu"></div>
-      </div>
-    </div>
-  </div>
+      <h3>🖥️ PC Status</h3>
 
+      <div class="card-content pc-control">
+        <div class="metric">
+          <div class="metric-label">Connection:</div>
+          <div class="metric-value" id="pcStatus">Checking...</div>
+        </div>
 
-
-  <div class="card">
-    <h3>💾 HDD</h3>
-    <div class="card-content">
-      <div id="storage-hdd" class="metric"></div>
-    </div>
-  </div>
-
-
-
-  <div class="card">
-    <h3>🌐 Network Usage</h3>
-    <div id="network"></div>
-  </div>
-
-  <div class="card">
-    <h3>⚡ Throttling Status</h3>
-    <div class="metric-value" id="throttling"></div>
-  </div>
-
-  <div class="card">
-    <h3>📍 IP Addresses</h3>
-    <div class="card-content ip-addresses">
-      <div class="metric">
-        <div class="metric-label">Public IP:</div>
-        <div class="metric-value" id="public-ip"></div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Local IPv4:</div>
-        <div class="ip-list" id="local-ipv4"></div>
+        <button id="powerOnBtn" onclick="powerOnPC()">
+          ⚡ Power On PC
+        </button>
       </div>
     </div>
-  </div>
+
+        <div class="card">
+      <h3>🌐 Network Usage</h3>
+      <div id="network"></div>
+    </div>
+
+    <div class="card">
+      <h3>⏱️ Uptime</h3>
+      <div class="metric-value" id="uptime"></div>
+    </div>
+
+        <div class="card">
+      <h3>🌡️ Temperature</h3>
+
+      <div class="card-content">
+
+        <div class="metric">
+          <div class="metric-label">CPU:</div>
+          <div class="metric-value" id="temp-cpu"></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">GPU:</div>
+          <div class="metric-value" id="temp-gpu"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📑 Memory</h3>
+
+      <div class="card-content">
+        <div class="metric" id="mem-table-row"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💾 HDD</h3>
+
+      <div class="card-content">
+        <div id="storage-hdd" class="metric"></div>
+        <canvas id="chart-hdd-pie"></canvas>
+      </div>
+    </div>
+
+        <div class="card">
+      <h3>📍 IP Addresses</h3>
+
+      <div class="card-content ip-addresses">
+
+        <div class="metric">
+          <div class="metric-label">Public IP:</div>
+          <div class="metric-value" id="public-ip"></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Local IPv4:</div>
+          <div class="ip-list" id="local-ipv4"></div>
+        </div>
+
+      </div>
+    </div>
+
+        <div class="card">
+      <h3>⚡ Throttling Status</h3>
+      <div class="metric-value" id="throttling"></div>
+    </div>
+
+
+  </main>
+
+
+  <!-- ==================== -->
+  <!-- PAGE: NETWORK -->
+  <!-- ==================== -->
+  <main id="page-network" class="page">
+
+
+
+  </main>
+
+
+  <!-- ==================== -->
+  <!-- PAGE: SYSTEM INFO -->
+  <!-- ==================== -->
+  <main id="page-more" class="page">
+
+
+
+    <div class="card">
+      <h3>ℹ️ System Information</h3>
+
+      <div class="metric">
+        <div class="metric-label">Server:</div>
+        <div class="metric-value">GaMeR-SerVer</div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ==================== -->
+  <!-- BOTTOM NAVIGATION -->
+  <!-- ==================== -->
+
+  <nav class="bottom-nav">
+
+    <button class="nav-item active" data-page="system">
+      <span class="nav-icon">🖥️</span>
+      <span class="nav-label">System</span>
+    </button>
+
+    <button class="nav-item" data-page="network">
+      <span class="nav-icon">🌐</span>
+      <span class="nav-label">SSH</span>
+    </button>
+
+    <button class="nav-item" data-page="more">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Automation</span>
+    </button>
+
+  </nav>
+
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>
+
 </body>
 
 </html>

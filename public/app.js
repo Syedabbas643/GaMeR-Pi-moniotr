@@ -314,3 +314,107 @@ function makeLineChart(ctx, label, datasets) {
     },
   });
 }
+
+/* =========================
+   SIMPLE ROUTER
+========================= */
+
+const pages = {
+  system: document.getElementById("page-system"),
+  network: document.getElementById("page-network"),
+  more: document.getElementById("page-more")
+};
+
+const navItems = document.querySelectorAll(".nav-item");
+
+
+function showPage(pageName) {
+
+  /* Hide all pages */
+  Object.values(pages).forEach(page => {
+    page.classList.remove("active");
+  });
+
+
+  /* Show selected page */
+  if (pages[pageName]) {
+    pages[pageName].classList.add("active");
+  }
+
+
+  /* Update navigation */
+  navItems.forEach(item => {
+    item.classList.remove("active");
+
+    if (item.dataset.page === pageName) {
+      item.classList.add("active");
+    }
+  });
+
+
+  /* Change URL without page reload */
+  history.pushState(
+    { page: pageName },
+    "",
+    "#" + pageName
+  );
+}
+
+
+/* Navigation click */
+
+navItems.forEach(item => {
+
+  item.addEventListener("click", () => {
+
+    const page = item.dataset.page;
+
+    showPage(page);
+
+  });
+
+});
+
+
+/* Browser back / forward */
+
+window.addEventListener("popstate", () => {
+
+  const page =
+    window.location.hash.substring(1) || "system";
+
+  showPageWithoutHistory(page);
+
+});
+
+
+/* Show page without adding another history entry */
+
+function showPageWithoutHistory(pageName) {
+
+  Object.values(pages).forEach(page => {
+    page.classList.remove("active");
+  });
+
+  if (pages[pageName]) {
+    pages[pageName].classList.add("active");
+  }
+
+  navItems.forEach(item => {
+
+    item.classList.toggle(
+      "active",
+      item.dataset.page === pageName
+    );
+
+  });
+
+}
+
+
+/* Open correct page when loading */
+
+const initialPage =
+  window.location.hash.substring(1) || "system";
+
+showPageWithoutHistory(initialPage);

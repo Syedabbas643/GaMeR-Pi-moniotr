@@ -526,3 +526,121 @@ canvas {
     --text-secondary: #ccc;
   }
 }
+
+/* =========================
+   PAGES
+========================= */
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: grid;
+}
+
+
+/* =========================
+   BOTTOM NAVIGATION
+========================= */
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+
+  width: min(500px, calc(100% - 24px));
+
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 16px;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  padding: 6px;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+
+  z-index: 1000;
+}
+
+
+/* Navigation button */
+
+.nav-item {
+  border: none;
+  background: transparent;
+
+  color: #777;
+
+  padding: 8px 4px;
+
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+
+/* Icon */
+
+.nav-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+
+/* Text */
+
+.nav-label {
+  font-size: 11px;
+}
+
+
+/* Active */
+
+.nav-item.active {
+  background: #222;
+  color: #4caf50;
+}
+
+
+/* Hover */
+
+.nav-item:hover {
+  color: #4caf50;
+}
+
+
+/* Prevent content from hiding behind navbar */
+
+body {
+  padding-bottom: 100px;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+  align-content: start;
+}
+
+.page > .card {
+  margin-bottom: 0;
+}
