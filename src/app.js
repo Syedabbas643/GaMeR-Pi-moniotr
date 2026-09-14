@@ -9,6 +9,9 @@ function createApp() {
   const app = express();
   const statsCollector = createStatsCollector();
   const prom = createPrometheusMetrics(statsCollector, { intervalMs: METRICS_INTERVAL_MS });
+  const { execFile } = require("child_process");
+  let gpio17Busy = false;
+
   if (!DISABLE_SQLITE) {
     initDatabase();
     const recorder = createMetricsRecorder(statsCollector, { intervalMs: METRICS_INTERVAL_MS, onSample: prom.updateFromSample });
@@ -18,9 +21,9 @@ function createApp() {
     prom.start();
   }
 
-  app.use(express.static(PUBLIC_DIR));
+app.use(express.static(PUBLIC_DIR));
 
-  app.get("/metrics", async (req, res) => {
+app.get("/metrics", async (req, res) => {
     try {
       res.setHeader("Content-Type", prom.register.contentType || "text/plain");
       const out = await prom.register.metrics();
@@ -31,8 +34,7 @@ function createApp() {
       res.status(500).json({ error: "Error generando métricas Prometheus", details });
     }
   });
-
-  app.get("/api/stats", async (req, res) => {
+app.get("/api/stats", async (req, res) => {
     try {
       const stats = await statsCollector.getStats();
       res.json(stats);
@@ -42,11 +44,6 @@ function createApp() {
       res.status(500).json({ error: "Error leyendo sistema", details });
     }
   });
-
-  const { execFile } = require("child_process");
-
-let gpio17Busy = false;
-
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {
         return res.status(409).json({
@@ -88,8 +85,7 @@ app.get("/gpio17", (req, res) => {
             });
         }, 500);
     });
-});
-
+  });
 app.get("/api/tailscale/netrunner", (req, res) => {
     execFile("tailscale", ["status", "--json"], (error, stdout, stderr) => {
         if (error) {
@@ -140,9 +136,8 @@ app.get("/api/tailscale/netrunner", (req, res) => {
             });
         }
     });
-});
-
-  app.get("/api/history", async (req, res) => {
+  });
+app.get("/api/history", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {
         res.status(503).json({ error: "Histórico no disponible (SQLite desactivado)" });
@@ -159,7 +154,7 @@ app.get("/api/tailscale/netrunner", (req, res) => {
       res.status(500).json({ error: "Error leyendo histórico", details });
     }
   });
-  app.get("/api/storage", async (req, res) => {
+app.get("/api/storage", async (req, res) => {
     try {
       const stats = await statsCollector.getStats();
       res.json({ storage: stats.storage });
@@ -169,7 +164,7 @@ app.get("/api/tailscale/netrunner", (req, res) => {
       res.status(500).json({ error: "Error leyendo storage", details });
     }
   });
-  app.get("/api/storage/history", async (req, res) => {
+app.get("/api/storage/history", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {
         res.status(503).json({ error: "Histórico de storage no disponible (SQLite desactivado)" });
@@ -188,7 +183,7 @@ app.get("/api/tailscale/netrunner", (req, res) => {
       res.status(500).json({ error: "Error leyendo histórico de storage", details });
     }
   });
-  app.get("/api/export/memory.csv", async (req, res) => {
+app.get("/api/export/memory.csv", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {
         res.status(503).json({ error: "Export no disponible (SQLite desactivado)" });
@@ -218,7 +213,7 @@ app.get("/api/tailscale/netrunner", (req, res) => {
       res.status(500).json({ error: "Error exportando memoria", details });
     }
   });
-  app.get("/api/export/storage.csv", async (req, res) => {
+app.get("/api/export/storage.csv", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {
         res.status(503).json({ error: "Export no disponible (SQLite desactivado)" });

@@ -513,12 +513,46 @@ async function getTransmissionStats() {
   };
 }
 
+function getCpuUsage() {
+  return new Promise((resolve) => {
+    const start = os.cpus();
+
+    setTimeout(() => {
+      const end = os.cpus();
+
+      let idleDiff = 0;
+      let totalDiff = 0;
+
+      for (let i = 0; i < start.length; i++) {
+        const startCpu = start[i].times;
+        const endCpu = end[i].times;
+
+        const idle = endCpu.idle - startCpu.idle;
+
+        const total =
+          (endCpu.user - startCpu.user) +
+          (endCpu.nice - startCpu.nice) +
+          (endCpu.sys - startCpu.sys) +
+          (endCpu.irq - startCpu.irq) +
+          (endCpu.idle - startCpu.idle);
+
+        idleDiff += idle;
+        totalDiff += total;
+      }
+
+      const usage = 100 - (idleDiff / totalDiff * 100);
+
+      resolve(usage);
+    }, 500);
+  });
+}
+
 function createStatsCollector({ now = () => Date.now() } = {}) {
   let previousNetworkStats = null;
   let previousNetworkTimestampMs = null;
 
   async function getStats() {
-    const loadAvg = os.loadavg();
+    const cpuUsage = await getCpuUsage();
     const uptimeSeconds = os.uptime();
     let totalMem = os.totalmem();
     let usedMem = totalMem - os.freemem();
@@ -596,9 +630,9 @@ function createStatsCollector({ now = () => Date.now() } = {}) {
     }
     return {
       cpu: {
-        load1min: loadAvg[0].toFixed(2),
-        load5min: loadAvg[1].toFixed(2),
-        load15min: loadAvg[2].toFixed(2),
+        load1min: cpuUsage.toFixed(0),
+        load5min: 0,
+        load15min: 0,
       },
       uptime: {
         seconds: uptimeSeconds,
