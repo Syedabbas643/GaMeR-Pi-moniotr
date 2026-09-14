@@ -903,3 +903,12 @@ canvas {
     opacity: 1;
   }
 }
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+.pages-container {
+  overflow: hidden;
+}
