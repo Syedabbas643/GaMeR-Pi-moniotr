@@ -805,56 +805,6 @@ canvas {
 
 
 /* =========================
-   VERY SMALL MOBILE
-========================= */
-
-@media (max-width: 375px) {
-
-  :root {
-    --font-size-h1: 1.25rem;
-
-    --font-size-h3: 0.95rem;
-
-    --font-size-body: 0.85rem;
-
-    --font-size-small: 0.75rem;
-
-    --card-padding: 0.75rem;
-  }
-
-
-  html {
-    font-size: 14px;
-  }
-
-
-  body {
-    padding: var(--spacing-sm);
-
-    padding-bottom: 100px;
-  }
-
-
-  .page.active {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
-  }
-
-
-  .mem-table-row {
-    font-size: 0.65rem;
-  }
-
-
-  .chart-container-pie {
-    width: 100px;
-
-    height: 100px;
-  }
-}
-
-
-/* =========================
    PRINT
 ========================= */
 
@@ -902,5 +852,54 @@ canvas {
     --border-color: #666;
 
     --text-secondary: #ccc;
+  }
+}
+
+/* =========================
+   ANIMATION
+========================= */
+
+/* Page transition */
+.page {
+  transition: transform 0.05s ease, opacity 0.05s ease;
+}
+
+.page.slide-out-left {
+  transform: translateX(-100px);
+  opacity: 0;
+}
+
+.page.slide-out-right {
+  transform: translateX(100px);
+  opacity: 0;
+}
+
+.page.slide-in-left {
+  animation: slideInLeft 0.05s ease;
+}
+
+.page.slide-in-right {
+  animation: slideInRight 0.05s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }

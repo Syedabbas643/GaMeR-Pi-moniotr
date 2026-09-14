@@ -372,32 +372,74 @@ const pages = {
 
 const navItems = document.querySelectorAll(".nav-item");
 
+const pageOrder = ["system", "network", "more"];
 
 function showPage(pageName) {
 
-  /* Hide all pages */
-  Object.values(pages).forEach(page => {
-    page.classList.remove("active");
-  });
+  const currentPageName =
+    Object.keys(pages).find(
+      key => pages[key].classList.contains("active")
+    ) || "system";
 
+  const currentIndex = pageOrder.indexOf(currentPageName);
+  const newIndex = pageOrder.indexOf(pageName);
 
-  /* Show selected page */
-  if (pages[pageName]) {
-    pages[pageName].classList.add("active");
-  }
+  if (currentPageName === pageName) return;
+
+  const direction =
+    newIndex > currentIndex ? "left" : "right";
+
+  const currentPage = pages[currentPageName];
+  const newPage = pages[pageName];
+
+  /* Animate current page out */
+  currentPage.classList.remove(
+    "slide-in-left",
+    "slide-in-right"
+  );
+
+  currentPage.classList.add(
+    direction === "left"
+      ? "slide-out-left"
+      : "slide-out-right"
+  );
+
+  setTimeout(() => {
+
+    /* Hide old page */
+    currentPage.classList.remove(
+      "active",
+      "slide-out-left",
+      "slide-out-right"
+    );
+
+    /* Show new page */
+    newPage.classList.add("active");
+
+    newPage.classList.remove(
+      "slide-in-left",
+      "slide-in-right"
+    );
+
+    newPage.classList.add(
+      direction === "left"
+        ? "slide-in-left"
+        : "slide-in-right"
+    );
+
+  }, 150);
 
 
   /* Update navigation */
   navItems.forEach(item => {
-    item.classList.remove("active");
-
-    if (item.dataset.page === pageName) {
-      item.classList.add("active");
-    }
+    item.classList.toggle(
+      "active",
+      item.dataset.page === pageName
+    );
   });
 
 
-  /* Change URL without page reload */
+  /* Change URL */
   history.pushState(
     { page: pageName },
     "",
