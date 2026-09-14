@@ -45,15 +45,20 @@ app.get("/api/stats", async (req, res) => {
     }
   });
 app.get("/restartserver", (req, res) => {
-  exec("sudo systemctl restart system-monitor", (error, stdout, stderr) => {
-    if (error) {
-      console.error("Restart failed:", error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
+  // Send response before restarting the service
+  res.json({
+    success: true,
+    message: "Server restarting..."
   });
+
+  setTimeout(() => {
+    exec("sudo -n /usr/bin/systemctl restart system-monitor", (error, stdout, stderr) => {
+      if (error) {
+        console.error("Restart failed:", error);
+        console.error("stderr:", stderr);
+      }
+    });
+  }, 500);
 });
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {

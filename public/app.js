@@ -91,7 +91,7 @@ async function loadStats() {
           : "alert-ok";
 
     document.getElementById("cpu-load").innerHTML =
-      `<span class="${cpuloadClass}">${data.cpu.load1min}</span>`;
+      `<span class="${cpuloadClass}">${data.cpu.load1min}%</span>`;
 
     document.getElementById("temp-cpu").innerHTML =
       `<span class="${cpuClass}">${data.temperature.cpu}</span>`;
