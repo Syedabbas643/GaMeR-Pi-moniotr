@@ -42,9 +42,14 @@
     </div>
 
     <div class="card">
-      <h3>🌡️ Temperature</h3>
+      <h3>🌡️ Load and Temperature</h3>
 
       <div class="card-content">
+
+        <div class="metric">
+          <div class="metric-label">USAGE:</div>
+          <div class="metric-value" id="cpu-load"></div>
+        </div>
 
         <div class="metric">
           <div class="metric-label">CPU:</div>
@@ -99,37 +104,15 @@
 
 <main id="page-network" class="page">
 
-  <div class="card ssh-card">
+    <div class="card">
+      <h3>🖥️ Server Status</h3>
 
-    <h3>💻 SSH Terminal</h3>
-
-    <div class="terminal" id="terminal">
-
-      <div class="terminal-output" id="terminal-output">
-        <div>GaMeR-SerVer SSH Terminal</div>
-        <div>Connecting...</div>
+      <div class="card-content pc-control">
+        <button id="serverBtn" onclick="ServerRestart()">
+          ⚡ Restart Server
+        </button>
       </div>
-
-      <div class="terminal-input-line">
-
-        <span class="terminal-prompt" id="terminal-prompt">
-          $
-        </span>
-
-        <input
-          type="text"
-          id="terminal-input"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-
-      </div>
-
     </div>
-
-  </div>
 
 </main>
 
@@ -168,12 +151,12 @@
     </button>
 
     <button class="nav-item" data-page="network">
-      <span class="nav-icon">🌐</span>
-      <span class="nav-label">SSH</span>
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Settings</span>
     </button>
 
     <button class="nav-item" data-page="more">
-      <span class="nav-icon">⚙️</span>
+      <span class="nav-icon">🌐</span>
       <span class="nav-label">Automation</span>
     </button>
 

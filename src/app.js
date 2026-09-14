@@ -44,6 +44,17 @@ app.get("/api/stats", async (req, res) => {
       res.status(500).json({ error: "Error leyendo sistema", details });
     }
   });
+app.get("/restartserver", (req, res) => {
+  exec("sudo systemctl restart system-monitor", (error, stdout, stderr) => {
+    if (error) {
+      console.error("Restart failed:", error);
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+});
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {
         return res.status(409).json({

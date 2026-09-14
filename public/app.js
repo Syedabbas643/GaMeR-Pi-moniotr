@@ -67,6 +67,7 @@ async function loadStats() {
 
     const cpuTemp = Number(data.temperature.cpu);
     const gpuTemp = Number(data.temperature.gpu);
+    const cpuload = Number(data.cpu.load1min);
 
     const cpuClass =
       cpuTemp > 75
@@ -81,6 +82,16 @@ async function loadStats() {
         : gpuTemp > 55
           ? "alert-warn"
           : "alert-ok";
+
+    const cpuloadClass =
+      cpuload > 65
+        ? "alert-crit"
+        : cpuload > 45
+          ? "alert-warn"
+          : "alert-ok";
+
+    document.getElementById("cpu-load").innerHTML =
+      `<span class="${cpuloadClass}">${data.cpu.load1min}</span>`;
 
     document.getElementById("temp-cpu").innerHTML =
       `<span class="${cpuClass}">${data.temperature.cpu}</span>`;
@@ -291,7 +302,7 @@ async function checkPCStatus() {
   }
 }
 
-  async function powerOnPC() {
+async function powerOnPC() {
     const button = document.getElementById("powerOnBtn");
 
     button.disabled = true;
@@ -313,13 +324,21 @@ async function checkPCStatus() {
 
       button.textContent = "❌ Failed";
     }
+}
+
+async function ServerRestart() {
+    try {
+    await fetch("/restartserver");
+  } catch (error) {
+    console.error("Restart request failed:", error);
   }
+}
 
   // Check immediately
-  checkPCStatus();
+checkPCStatus();
 
   // Check every 5 seconds
-  setInterval(checkPCStatus, 3000);
+setInterval(checkPCStatus, 3000);
 
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 

@@ -88,7 +88,7 @@ body {
 
   /* ONE unified 2-column layout */
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: var(--spacing-md);
 
@@ -150,7 +150,7 @@ h1 {
   grid-column: 1 / -1;
 
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    repeat(3, minmax(0, 1fr));
 
   gap: var(--spacing-md);
 
@@ -218,6 +218,20 @@ h1 {
 ========================= */
 
 #powerOnBtn {
+  margin-top: 15px;
+
+  padding: 10px 18px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+#serverBtn {
   margin-top: 15px;
 
   padding: 10px 18px;
@@ -889,103 +903,4 @@ canvas {
 
     --text-secondary: #ccc;
   }
-}
-
-/* =========================
-   SSH TERMINAL
-========================= */
-
-.ssh-card {
-  grid-column: 1 / -1;
-}
-
-.terminal {
-  width: 100%;
-  height: 500px;
-
-  background: #050505;
-
-  border: 1px solid #333;
-  border-radius: 10px;
-
-  padding: 15px;
-
-  font-family:
-    "Cascadia Code",
-    "Consolas",
-    "Monaco",
-    monospace;
-
-  font-size: 14px;
-
-  overflow-y: auto;
-
-  box-shadow:
-    inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.terminal-output {
-  white-space: pre-wrap;
-  word-break: break-word;
-
-  color: #eee;
-
-  line-height: 1.5;
-}
-
-.terminal-input-line {
-  display: flex;
-
-  align-items: center;
-
-  width: 100%;
-}
-
-.terminal-prompt {
-  color: #4caf50;
-
-  margin-right: 8px;
-
-  flex-shrink: 0;
-}
-
-#terminal-input {
-  flex: 1;
-
-  min-width: 0;
-
-  background: transparent;
-
-  border: none;
-
-  outline: none;
-
-  color: #eee;
-
-  font-family: inherit;
-
-  font-size: inherit;
-}
-
-#terminal-input:focus {
-  outline: none;
-}
-
-
-/* Mobile */
-
-@media (max-width: 767px) {
-
-  .terminal {
-    height: 60vh;
-
-    min-height: 350px;
-
-    padding: 10px;
-
-    font-size: 12px;
-
-    border-radius: 8px;
-  }
-
 }
