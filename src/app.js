@@ -60,6 +60,94 @@ app.get("/restartserver", (req, res) => {
     });
   }, 500);
 });
+// ===============================
+// Tank Sensor
+// ===============================
+
+const tankReadings = [];
+const MAX_TANK_READINGS = 30;
+
+// Receive distance from ESP8266
+app.post("/api/tank/distance", (req, res) => {
+    try {
+        const { device, distance_cm } = req.body;
+
+        if (typeof distance_cm !== "number" || !isFinite(distance_cm)) {
+            return res.status(400).json({
+                ok: false,
+                error: "Invalid distance_cm"
+            });
+        }
+
+        const reading = {
+            device: device || "tank_sensor",
+            distance_cm: Number(distance_cm.toFixed(2)),
+            timestamp: Date.now()
+        };
+
+        // Add newest reading
+        tankReadings.push(reading);
+
+        // Keep only last 30
+        if (tankReadings.length > MAX_TANK_READINGS) {
+            tankReadings.shift();
+        }
+
+        console.log(
+            `[TANK] ${reading.distance_cm} cm | ${new Date(reading.timestamp).toLocaleTimeString()}`
+        );
+
+        res.json({
+            ok: true,
+            reading
+        });
+
+    } catch (error) {
+        console.error("Tank sensor error:", error);
+
+        res.status(500).json({
+            ok: false,
+            error: "Server error"
+        });
+    }
+});
+// Return tank statistics
+app.get("/api/tank/stats", (req, res) => {
+
+    const readings = tankReadings;
+
+    if (readings.length === 0) {
+        return res.json({
+            ok: true,
+            count: 0,
+            latest: null,
+            average: null,
+            minimum: null,
+            maximum: null,
+            readings: []
+        });
+    }
+
+    const distances = readings.map(r => r.distance_cm);
+
+    const sum = distances.reduce((a, b) => a + b, 0);
+
+    res.json({
+        ok: true,
+
+        count: readings.length,
+
+        latest: readings[readings.length - 1],
+
+        average: Number((sum / distances.length).toFixed(2)),
+
+        minimum: Math.min(...distances),
+
+        maximum: Math.max(...distances),
+
+        readings: readings
+    });
+});
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {
         return res.status(409).json({
