@@ -82,7 +82,6 @@ app.post("/api/tank/distance", (req, res) => {
         const reading = {
             device: device || "tank_sensor",
             distance_cm: Number(distance_cm.toFixed(2)),
-            timestamp: Date.now()
         };
 
         // Add newest reading
@@ -92,10 +91,6 @@ app.post("/api/tank/distance", (req, res) => {
         if (tankReadings.length > MAX_TANK_READINGS) {
             tankReadings.shift();
         }
-
-        console.log(
-            `[TANK] ${reading.distance_cm} cm | ${new Date(reading.timestamp).toLocaleTimeString()}`
-        );
 
         res.json({
             ok: true,
