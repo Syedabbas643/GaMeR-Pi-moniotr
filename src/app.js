@@ -21,6 +21,7 @@ function createApp() {
     prom.start();
   }
 
+app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
 
 app.get("/metrics", async (req, res) => {
