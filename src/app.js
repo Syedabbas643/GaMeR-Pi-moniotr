@@ -4,6 +4,8 @@ const { createStatsCollector } = require("./stats");
 const { initDatabase, getHistory, execSql } = require("./db/sqlite");
 const { createMetricsRecorder } = require("./metrics/recorder");
 const { createPrometheusMetrics } = require("./metrics/prometheus");
+const { SerialPort } = require("serialport");
+const { ReadlineParser } = require("@serialport/parser-readline");
 
 function createApp() {
   const app = express();
@@ -60,6 +62,117 @@ app.get("/restartserver", (req, res) => {
       }
     });
   }, 500);
+});
+
+// ==========================================
+// HMMd S3KM1110 SENSOR
+// ==========================================
+
+const sensorData = {
+  humanDetected: false,
+  rangeCm: null,
+  lastUpdate: null
+};
+
+let latestRange = null;
+let latestDetection = false;
+
+
+// ==========================================
+// OPEN SENSOR UART
+// ==========================================
+
+const sensorPort = new SerialPort({
+  path: "/dev/ttyAMA0",
+  baudRate: 115200,
+  autoOpen: true
+});
+
+const sensorParser = sensorPort.pipe(
+  new ReadlineParser({
+    delimiter: "\r\n"
+  })
+);
+
+
+// ==========================================
+// READ SENSOR UART
+// ==========================================
+
+sensorParser.on("data", (line) => {
+
+  line = line.trim();
+
+  if (!line) {
+    return;
+  }
+
+  console.log("HMMd:", line);
+
+
+  // -----------------------------
+  // HUMAN DETECTED
+  // -----------------------------
+
+  if (line === "ON") {
+
+    latestDetection = true;
+
+    sensorData.humanDetected = true;
+    sensorData.lastUpdate = Date.now();
+
+    return;
+  }
+
+
+  // -----------------------------
+  // HUMAN NOT DETECTED
+  // -----------------------------
+
+  if (line === "OFF") {
+
+    latestDetection = false;
+    latestRange = null;
+
+    sensorData.humanDetected = false;
+    sensorData.rangeCm = null;
+    sensorData.lastUpdate = Date.now();
+
+    return;
+  }
+
+
+  // -----------------------------
+  // RANGE
+  // Example: Range 113
+  // -----------------------------
+
+  const match = line.match(/^Range\s+(\d+)$/);
+
+  if (match) {
+
+    const value = Number(match[1]);
+
+    if (value >= 0 && value <= 500) {
+
+      latestRange = value;
+
+      sensorData.rangeCm = value;
+      sensorData.lastUpdate = Date.now();
+
+    }
+  }
+});
+
+
+// ==========================================
+// SENSOR API
+// ==========================================
+
+app.get("/api/sensor", (req, res) => {
+
+  res.json(sensorData);
+
 });
 // ===============================
 // Tank Sensor
