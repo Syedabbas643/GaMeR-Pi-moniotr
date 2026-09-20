@@ -855,11 +855,6 @@ canvas {
   }
 }
 
-.metric #pcroomStatus,
-.metric #pcroomStatusrange {
-  display: block;
-}
-
 /* =========================
    ANIMATION
 ========================= */
