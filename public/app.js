@@ -273,32 +273,90 @@ loadStats();
 setInterval(loadStats, 3000);
 
 async function checkPCStatus() {
+
   const statusElement = document.getElementById("pcStatus");
   const button = document.getElementById("powerOnBtn");
 
+  const roomStatusElement = document.getElementById("pcroomStatus");
+  const roomRangeElement = document.getElementById("pcroomStatusrange");
+
   try {
+
     const response = await fetch("/api/tailscale/netrunner");
     const data = await response.json();
 
-    if (data.connected) {
+
+    // ==========================================
+    // PC / NETRUNNER STATUS
+    // ==========================================
+
+    if (data.netrunner?.connected) {
+
       statusElement.textContent = "🟢 Connected";
 
       button.disabled = false;
       button.innerHTML = "⚡ Power Off PC";
 
     } else {
+
       statusElement.textContent = "🔴 Disconnected";
 
       button.disabled = false;
       button.textContent = "⚡ Power On PC";
+
     }
 
+
+    // ==========================================
+    // ROOM / HUMAN DETECTION
+    // ==========================================
+
+    if (data.sensor?.humanDetected) {
+
+      roomStatusElement.textContent = "🟢 Human Detected";
+
+    } else {
+
+      roomStatusElement.textContent = "🔵 No Human";
+
+    }
+
+
+    // ==========================================
+    // SENSOR RANGE
+    // ==========================================
+
+    if (data.sensor?.rangeCm !== null &&
+        data.sensor?.rangeCm !== undefined) {
+
+      roomRangeElement.textContent =
+        `${data.sensor.rangeCm} cm`;
+
+    } else {
+
+      roomRangeElement.textContent = "-- cm";
+
+    }
+
+
   } catch (error) {
+
     console.error("PC status error:", error);
 
+
+    // PC status
     statusElement.textContent = "⚠️ Unknown";
+
     button.disabled = false;
     button.textContent = "⚡ Power On PC";
+
+
+    // Room status
+    roomStatusElement.textContent = "⚠️ Unknown";
+
+    // Range
+    roomRangeElement.textContent = "-- cm";
+
   }
 }
 
@@ -338,7 +396,7 @@ async function ServerRestart() {
 checkPCStatus();
 
   // Check every 5 seconds
-setInterval(checkPCStatus, 3000);
+setInterval(checkPCStatus, 1000);
 
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 

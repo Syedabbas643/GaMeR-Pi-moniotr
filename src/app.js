@@ -302,56 +302,110 @@ app.get("/gpio17", (req, res) => {
     });
   });
 app.get("/api/tailscale/netrunner", (req, res) => {
+
+    // ==========================================
+    // 1. DEFAULT RESPONSE
+    // ==========================================
+
+    const response = {
+        success: true,
+
+        netrunner: {
+            device: "netrunner",
+            connected: false,
+            found: false,
+            ip: null,
+            hostname: null,
+            lastSeen: null
+        },
+
+        sensor: {
+            humanDetected: sensorData.humanDetected,
+            rangeCm: sensorData.rangeCm,
+            lastUpdate: sensorData.lastUpdate
+        }
+    };
+
+
+    // ==========================================
+    // 2. GET TAILSCALE STATUS
+    // ==========================================
+
     execFile("tailscale", ["status", "--json"], (error, stdout, stderr) => {
+
         if (error) {
+
             console.error("Tailscale error:", error);
-            return res.status(500).json({
-                success: false,
-                error: "Unable to check Tailscale status"
-            });
+
+            // Do NOT return 500.
+            // Keep default Netrunner data.
+            // Other data can still be returned.
+
+            response.netrunner.error = "Unable to check Tailscale status";
+
+            return res.json(response);
         }
 
+
+        // ==========================================
+        // 3. PARSE TAILSCALE DATA
+        // ==========================================
+
         try {
+
             const status = JSON.parse(stdout);
 
             const peers = Object.values(status.Peer || {});
 
             const netrunner = peers.find(peer => {
+
                 return (
                     peer.HostName?.toLowerCase() === "netrunner" ||
                     peer.DNSName?.toLowerCase().startsWith("netrunner.")
                 );
+
             });
 
-            if (!netrunner) {
-                return res.json({
-                    success: true,
+
+            // ==========================================
+            // 4. UPDATE NETRUNNER DATA
+            // ==========================================
+
+            if (netrunner) {
+
+                response.netrunner = {
                     device: "netrunner",
-                    connected: false,
-                    found: false
-                });
+                    connected: netrunner.Online === true,
+                    found: true,
+                    ip: netrunner.TailscaleIPs?.[0] || null,
+                    hostname: netrunner.HostName,
+                    lastSeen: netrunner.LastSeen || null
+                };
+
             }
 
-            res.json({
-                success: true,
-                device: "netrunner",
-                connected: netrunner.Online === true,
-                found: true,
-                ip: netrunner.TailscaleIPs?.[0] || null,
-                hostname: netrunner.HostName,
-                lastSeen: netrunner.LastSeen || null
-            });
 
         } catch (parseError) {
-            console.error("Tailscale JSON parse error:", parseError);
 
-            res.status(500).json({
-                success: false,
-                error: "Invalid Tailscale response"
-            });
+            console.error(
+                "Tailscale JSON parse error:",
+                parseError
+            );
+
+            response.netrunner.error = "Invalid Tailscale response";
+
         }
+
+
+        // ==========================================
+        // 5. FINAL RESPONSE
+        // ==========================================
+
+        return res.json(response);
+
     });
-  });
+
+});
 app.get("/api/history", async (req, res) => {
     try {
       if (DISABLE_SQLITE) {
