@@ -107,9 +107,6 @@ sensorParser.on("data", (line) => {
     return;
   }
 
-  console.log("HMMd:", line);
-
-
   // -----------------------------
   // HUMAN DETECTED
   // -----------------------------
