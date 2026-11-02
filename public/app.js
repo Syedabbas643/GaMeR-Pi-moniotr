@@ -396,6 +396,13 @@ async function turnMotorOn() {
 
     try {
         const response = await fetch("/motorrelay/on");
+
+        // If the server returns an error status (like 404 or 500), grab the text first
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -405,18 +412,20 @@ async function turnMotorOn() {
         }
 
     } catch (error) {
-        console.error("Motor ON error:", error);
-        button.textContent = "❌ Failed";
+        // This will print the exact, detailed error in your browser console
+        console.error("Motor ON error details:", error.message);
+        
+        // Optionally show a short snippet of the error on the button temporarily
+        button.textContent = "❌ Error (See Console)";
     } finally {
-        // Re-enable button after 2 seconds
+        // Re-enable button after 3 seconds so you have time to look at it
         setTimeout(() => {
             button.disabled = false;
             button.textContent = "Turn Motor ON";
-        }, 2000);
+        }, 3000);
     }
 }
 
-// Function to Turn Motor OFF
 async function turnMotorOff() {
     const button = document.getElementById("motorOffBtn");
 
@@ -425,6 +434,12 @@ async function turnMotorOff() {
 
     try {
         const response = await fetch("/motorrelay/off");
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -434,14 +449,13 @@ async function turnMotorOff() {
         }
 
     } catch (error) {
-        console.error("Motor OFF error:", error);
-        button.textContent = "❌ Failed";
+        console.error("Motor OFF error details:", error.message);
+        button.textContent = "❌ Error (See Console)";
     } finally {
-        // Re-enable button after 2 seconds
         setTimeout(() => {
             button.disabled = false;
             button.textContent = "Turn Motor OFF";
-        }, 2000);
+        }, 3000);
     }
 }
 
