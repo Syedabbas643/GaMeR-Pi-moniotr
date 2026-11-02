@@ -411,7 +411,7 @@ app.get("/api/netrunner", (req, res) => {
 const espClient = new net.Socket();
 
 function connectToESP() {
-  console.log(`Connecting to ESP8266 at ${ESP_IP}:${ESP_PORT}...`);
+  console.log(`Connecting to ESP8266 at ${MOTOR_ESP_IP}:${MOTOR_ESP_PORT}...`);
   espClient.connect(ESP_PORT, ESP_IP, () => {
     console.log('✅ Connected to ESP8266 TCP server!');
   });
