@@ -407,36 +407,48 @@ app.get("/api/netrunner", (req, res) => {
 
 });
 
+// Create a persistent TCP client connection
+const espClient = new net.Socket();
 
-
-// Internal helper function to handle TCP socket communication
-function sendTcpCommand(hexString, callback) {
-  const client = new net.Socket();
-  
-  client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
-    const buffer = Buffer.from(hexString.replace(/\s+/g, ''), 'hex');
-    client.write(buffer, () => {
-      client.end(); // Close TCP connection after sending
-    });
+function connectToESP() {
+  console.log(`Connecting to ESP8266 at ${ESP_IP}:${ESP_PORT}...`);
+  espClient.connect(ESP_PORT, ESP_IP, () => {
+    console.log('✅ Connected to ESP8266 TCP server!');
   });
 
-  client.on('error', (err) => {
+  espClient.on('error', (err) => {
+    console.error('ESP TCP Error:', err.message);
+  });
+
+  espClient.on('close', () => {
+    console.log('⚠️ ESP connection closed. Reconnecting in 3 seconds...');
+    setTimeout(connectToESP, 3000);
+  });
+}
+
+// Establish the persistent connection on startup
+connectToESP();
+
+// Helper function to send hex commands over the open connection
+function sendCommand(hexString, callback) {
+  if (!espClient.writable) {
+    return callback(new Error('Not connected to ESP8266 yet. Try again in a moment.'));
+  }
+
+  const buffer = Buffer.from(hexString.replace(/\s+/g, ''), 'hex');
+  espClient.write(buffer, (err) => {
     callback(err);
-  });
-
-  client.on('close', () => {
-    callback(null);
   });
 }
 
 // Function 1: Turn Relay ON
 function turnRelayOn(callback) {
-  sendTcpCommand('A0 01 01 A2', callback);
+  sendCommand('A0 01 01 A2', callback);
 }
 
 // Function 2: Turn Relay OFF
 function turnRelayOff(callback) {
-  sendTcpCommand('A0 01 00 A1', callback);
+  sendCommand('A0 01 00 A1', callback);
 }
 
 // Express API endpoint for ON
