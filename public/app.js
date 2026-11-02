@@ -395,7 +395,7 @@ async function turnMotorOn() {
     button.textContent = "⚡ Turning Motor ON...";
 
     try {
-        const response = await fetch("http://<YOUR_PI_IP>:3000/relay/on");
+        const response = await fetch("/motorrelay/on");
         const data = await response.json();
 
         if (data.success) {
@@ -424,7 +424,7 @@ async function turnMotorOff() {
     button.textContent = "⏳ Turning Motor OFF...";
 
     try {
-        const response = await fetch("http://<YOUR_PI_IP>:3000/relay/off");
+        const response = await fetch("/motorrelay/off");
         const data = await response.json();
 
         if (data.success) {
