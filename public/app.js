@@ -276,13 +276,16 @@ async function checkPCStatus() {
 
   const statusElement = document.getElementById("pcStatus");
   const button = document.getElementById("powerOnBtn");
+  const motorONbutton = document.getElementById("powerOnMotor");
+  const motorOFFbutton = document.getElementById("powerOffMotor");
+  const motorstatus = document.getElementById("motorStatus");
 
   const roomStatusElement = document.getElementById("pcroomStatus");
   const roomRangeElement = document.getElementById("pcroomStatusrange");
 
   try {
 
-    const response = await fetch("/api/tailscale/netrunner");
+    const response = await fetch("/api/netrunner");
     const data = await response.json();
 
 
@@ -384,6 +387,64 @@ async function powerOnPC() {
     }
 }
 
+// Function to Turn Motor ON
+async function turnMotorOn() {
+    const button = document.getElementById("motorOnBtn");
+
+    button.disabled = true;
+    button.textContent = "⚡ Turning Motor ON...";
+
+    try {
+        const response = await fetch("http://<YOUR_PI_IP>:3000/relay/on");
+        const data = await response.json();
+
+        if (data.success) {
+            button.textContent = "✅ Motor ON";
+        } else {
+            throw new Error(data.error || "Failed to turn motor ON");
+        }
+
+    } catch (error) {
+        console.error("Motor ON error:", error);
+        button.textContent = "❌ Failed";
+    } finally {
+        // Re-enable button after 2 seconds
+        setTimeout(() => {
+            button.disabled = false;
+            button.textContent = "Turn Motor ON";
+        }, 2000);
+    }
+}
+
+// Function to Turn Motor OFF
+async function turnMotorOff() {
+    const button = document.getElementById("motorOffBtn");
+
+    button.disabled = true;
+    button.textContent = "⏳ Turning Motor OFF...";
+
+    try {
+        const response = await fetch("http://<YOUR_PI_IP>:3000/relay/off");
+        const data = await response.json();
+
+        if (data.success) {
+            button.textContent = "⚪ Motor OFF";
+        } else {
+            throw new Error(data.error || "Failed to turn motor OFF");
+        }
+
+    } catch (error) {
+        console.error("Motor OFF error:", error);
+        button.textContent = "❌ Failed";
+    } finally {
+        // Re-enable button after 2 seconds
+        setTimeout(() => {
+            button.disabled = false;
+            button.textContent = "Turn Motor OFF";
+        }, 2000);
+    }
+}
+
 async function ServerRestart() {
     try {
     await fetch("/restartserver");
@@ -395,8 +456,8 @@ async function ServerRestart() {
   // Check immediately
 checkPCStatus();
 
-  // Check every 5 seconds
-setInterval(checkPCStatus, 1000);
+  // Check every 1 seconds
+setInterval(checkPCStatus, 2000);
 
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 
