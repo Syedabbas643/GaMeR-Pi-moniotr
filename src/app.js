@@ -1,4 +1,5 @@
 const express = require("express");
+const net = require('net');
 const { NODE_ENV, PUBLIC_DIR, METRICS_INTERVAL_MS, DISABLE_SQLITE } = require("./config");
 const { createStatsCollector } = require("./stats");
 const { initDatabase, getHistory, execSql } = require("./db/sqlite");
