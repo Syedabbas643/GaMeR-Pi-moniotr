@@ -412,7 +412,7 @@ const espClient = new net.Socket();
 
 function connectToESP() {
   console.log(`Connecting to ESP8266 at ${MOTOR_ESP_IP}:${MOTOR_ESP_PORT}...`);
-  espClient.connect(ESP_PORT, ESP_IP, () => {
+  espClient.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
     console.log('✅ Connected to ESP8266 TCP server!');
   });
 
