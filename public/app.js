@@ -342,20 +342,48 @@ async function checkPCStatus() {
     }
 
 
-    const tank = data.tank;
+    const tank = data?.tank;
 
-        document.getElementById("tankPercentage").textContent =
-            tank.percentage + "%";
+    if (tank) {
 
-        document.getElementById("tankDistance").textContent =
-            tank.distance_cm.toFixed(2) + " cm";
+        if (tank.percentage != null && Number.isFinite(Number(tank.percentage))) {
 
-        const arc = document.getElementById("tankGaugeArc");
+            const percentage = Math.max(0, Math.min(100, Number(tank.percentage)));
 
-        const arcLength = 376.99;
+            document.getElementById("tankPercentage").textContent =
+                percentage + "%";
 
-        arc.style.strokeDashoffset =
-            arcLength - (tank.percentage / 100 * arcLength);
+            const arc = document.getElementById("tankGaugeArc");
+
+            if (arc) {
+                const arcLength = 376.99;
+
+                arc.style.strokeDashoffset =
+                    arcLength - (percentage / 100 * arcLength);
+            }
+        }
+
+        if (tank.distance_cm != null && Number.isFinite(Number(tank.distance_cm))) {
+
+            document.getElementById("tankDistance").textContent =
+                Number(tank.distance_cm).toFixed(2) + " cm";
+        }
+
+        if (tank.motorstatus != null){
+
+          if(tank.motorstatus == "ON"){
+              const button = document.getElementById("motorOnBtn");
+              button.disabled = true;
+          }
+
+          if(tank.motorstatus == "OFF"){
+              const button = document.getElementById("motorOffBtn");
+              button.disabled = true;
+          }
+
+          document.getElementById("motorStatus").textContent ="MOTOR : " + tank.motorstatus;
+        }
+    }
 
 
   } catch (error) {
@@ -408,7 +436,7 @@ async function turnMotorOn() {
     const button = document.getElementById("motorOnBtn");
 
     button.disabled = true;
-    button.textContent = "⚡ Turning Motor ON...";
+    button.textContent = "Power On Motor";
 
     try {
         const response = await fetch("/motorrelay/on");
@@ -422,7 +450,7 @@ async function turnMotorOn() {
         const data = await response.json();
 
         if (data.success) {
-            button.textContent = "✅ Motor ON";
+            button.textContent = "Power On Motor";
         } else {
             throw new Error(data.error || "Failed to turn motor ON");
         }
@@ -437,7 +465,7 @@ async function turnMotorOn() {
         // Re-enable button after 3 seconds so you have time to look at it
         setTimeout(() => {
             button.disabled = false;
-            button.textContent = "Turn Motor ON";
+            button.textContent = "Power On Motor";
         }, 3000);
     }
 }
@@ -446,7 +474,7 @@ async function turnMotorOff() {
     const button = document.getElementById("motorOffBtn");
 
     button.disabled = true;
-    button.textContent = "⏳ Turning Motor OFF...";
+    button.textContent = "Power off Motor";
 
     try {
         const response = await fetch("/motorrelay/off");
@@ -459,7 +487,7 @@ async function turnMotorOff() {
         const data = await response.json();
 
         if (data.success) {
-            button.textContent = "⚪ Motor OFF";
+            button.textContent = "Power off Motor";
         } else {
             throw new Error(data.error || "Failed to turn motor OFF");
         }
@@ -470,7 +498,7 @@ async function turnMotorOff() {
     } finally {
         setTimeout(() => {
             button.disabled = false;
-            button.textContent = "Turn Motor OFF";
+            button.textContent = "Power off Motor";
         }, 3000);
     }
 }

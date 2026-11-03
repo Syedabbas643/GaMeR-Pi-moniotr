@@ -47,11 +47,13 @@ const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
+const MOTOR_START_PERCENTAGE = 20;
+const MOTOR_STOP_PERCENTAGE = 95;
 let motorState = "UNKNOWN";
 let motorCurrentRun = null;
 let motorCommandPending = false;
-const MOTOR_START_PERCENTAGE = 20;
-const MOTOR_STOP_PERCENTAGE = 95;
+let motorrelayStatus = "UNKNOWN";
+let motorrelayResponseBuffer = "";
 
 discovery.on("message", (msg, rinfo) => {
     if (msg.toString().trim() === "WHO_IS_NETSERVER") {
@@ -260,6 +262,7 @@ app.get("/api/netrunner", (req, res) => {
             distance_cm: latestTankData.distance_cm,
             percentage: latestTankData.percentage,
             lastUpdate: latestTankData.lastUpdate,
+            motorstatus: motorrelayStatus,
             calibration: {
                 minimum_cm: TANK_MIN_CM,
                 maximum_cm: TANK_MAX_CM
@@ -480,26 +483,9 @@ function setMotorState(targetState, callback = () => {}) {
     });
 }
 
-function turnRelayOn(callback) {
-    setMotorState("ON", callback);
-}
-
-function turnRelayOff(callback) {
-    setMotorState("OFF", callback);
-}
-
-function Relaystatus(callback) {
-    sendRelayCommand("FF", callback)
-}
-
 function keepEspConnectionAlive() {
 
-    // Reset the 2-minute inactivity timer
-    //clearTimeout(espIdleTimer);
-
-    // Already connected or connecting
-    if (espConnected || espConnecting) {
-        //scheduleEspDisconnect();
+     if (espConnected || espConnecting) {
         return;
     }
 
@@ -523,14 +509,23 @@ function keepEspConnectionAlive() {
 
     });
 
-    client.on("data", (data) => {
+    espClient.on("data", (data) => {
 
-        console.log(
-            "ESP Response:",
-            data.toString("utf8").trim()
-        );
+    motorrelayResponseBuffer += data.toString();
 
-    });
+    const lines = motorrelayResponseBuffer.split(/\r?\n/);
+    motorrelayResponseBuffer = lines.pop();
+
+    for (const line of lines) {
+
+        if (line.includes("RELAY:ON")) {
+            motorrelayStatus = "ON";
+        }
+        else if (line.includes("RELAY:OFF")) {
+            motorrelayStatus = "OFF";
+        }
+    }
+});
 
     client.on("error", (err) => {
 
@@ -569,6 +564,32 @@ function keepEspConnectionAlive() {
 
 }
 
+function turnRelayOn(callback) {
+    setMotorState("ON", callback);
+}
+
+function turnRelayOff(callback) {
+    setMotorState("OFF", callback);
+}
+
+function Relaystatus(callback) {
+
+    sendRelayCommand("FF", (err) => {
+
+        if (err) {
+            return callback(err);
+        }
+
+        // Allow time for ESP status response
+        setTimeout(() => {
+
+            callback(null, relayStatus);
+
+        }, 200);
+
+    });
+
+}
 
 function sendRelayCommand(hexString, callback) {
 
@@ -653,12 +674,23 @@ app.post("/api/tank/distance", (req, res) => {
 });
 
 app.get('/motorrelay/status', (req, res) => {
-  Relaystatus((err) => {
-    if (err) {
-      return res.status(500).json({ success: false, error: err.message });
-    }
-    res.json({ success: true, message: 'Relay status got successfully' });
-  });
+
+    Relaystatus((err, status) => {
+
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message
+            });
+        }
+
+        res.json({
+            success: true,
+            relayStatus: status
+        });
+
+    });
+
 });
 
 app.get('/motorrelay/on', (req, res) => {
