@@ -420,8 +420,12 @@ app.get("/api/netrunner", (req, res) => {
         // ==========================================
         // 5. FINAL RESPONSE
         // ==========================================
-        Relaystatus();
-        
+        Relaystatus((err) => {
+          if (err) {
+            //return res.status(500).json({ success: false, error: err.message });
+          }
+          });
+
         return res.json(response);
 
     });
