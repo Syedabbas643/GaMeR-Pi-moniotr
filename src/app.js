@@ -206,8 +206,6 @@ app.post("/api/tank/distance", (req, res) => {
             distance_cm: Number(distance_cm.toFixed(2)),
         };
 
-        console.log(`Tank Distance: ${reading.distance_cm} cm`);
-
         // Add newest reading
         tankReadings.push(reading);
 
