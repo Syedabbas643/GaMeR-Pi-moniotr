@@ -31,7 +31,7 @@ app.use(express.static(PUBLIC_DIR));
 const MOTOR_ESP_IP = '192.168.1.7'; 
 const MOTOR_ESP_PORT = 8080;
 const ESP_IDLE_TIMEOUT = 2 * 60 * 1000; // 2 minutes
-const ESP_CONNECT_TIMEOUT = 5000;
+const ESP_CONNECT_TIMEOUT = 30000;
 
 let espClient = null;
 let espConnected = false;
@@ -415,14 +415,18 @@ app.get("/api/netrunner", (req, res) => {
 
 });
 
+// ==========================================
+// ESP8266 CONNECTION MANAGER
+// ==========================================
+
 function keepEspConnectionAlive() {
 
     // Reset the 2-minute inactivity timer
-    clearTimeout(espIdleTimer);
+    //clearTimeout(espIdleTimer);
 
-    // Already connected or connecting
+    // Already connected or connection in progress
     if (espConnected || espConnecting) {
-        scheduleEspDisconnect();
+        //scheduleEspDisconnect();
         return;
     }
 
@@ -433,68 +437,58 @@ function keepEspConnectionAlive() {
     espClient = client;
     espConnecting = true;
 
-    // Do NOT use client.setTimeout() here.
-    // An idle TCP connection is expected.
+    client.setTimeout(ESP_CONNECT_TIMEOUT);
 
     client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
-
-        if (espClient !== client) return;
 
         espConnecting = false;
         espConnected = true;
 
         console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
 
-        scheduleEspDisconnect();
-
-    });
-
-    client.on("data", (data) => {
-
-        console.log(
-            "ESP Response:",
-            data.toString("utf8").trim()
-        );
-
     });
 
     client.on("error", (err) => {
 
-        console.error("ESP TCP Error:", err.message);
+        console.error("ESP8266 TCP error:", err.message);
+
+    });
+
+    client.on('data', (data) => {
+    const responseHex = data.toString('hex').toUpperCase();
+    const responseText = data.toString('utf8').trim();
+
+    console.log("--- ESP8266 Relay Response Received ---");
+    console.log("Hex:", responseHex);
+    console.log("Text:", responseText);
+});
+
+    client.on("timeout", () => {
+
+        console.log("ESP8266 connection timeout");
+
+        client.destroy();
 
     });
 
     client.on("close", () => {
 
-        if (espClient !== client) return;
-
         console.log("ESP8266 TCP connection closed");
 
-        espClient = null;
-        espConnected = false;
-        espConnecting = false;
+        // Only update state if this is still the active socket
+        if (espClient === client) {
 
-    });
-
-    // Protect against a connection attempt that never completes
-    const connectionTimer = setTimeout(() => {
-
-        if (espClient === client && !espConnected) {
-
-            console.log("ESP connection establishment timed out");
-
-            client.destroy();
+            espClient = null;
+            espConnected = false;
+            espConnecting = false;
 
         }
 
-    }, 5000);
-
-    client.once("connect", () => {
-        clearTimeout(connectionTimer);
     });
 
+    // Start inactivity timer
+    //scheduleEspDisconnect();
 }
-
 
 
 // ==========================================
