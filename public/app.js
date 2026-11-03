@@ -471,12 +471,6 @@ async function turnMotorOn() {
         
         // Optionally show a short snippet of the error on the button temporarily
         button.textContent = "❌ Error (See Console)";
-    } finally {
-        // Re-enable button after 3 seconds so you have time to look at it
-        setTimeout(() => {
-            button.disabled = false;
-            button.textContent = "Power On Motor";
-        }, 3000);
     }
 }
 
@@ -505,11 +499,6 @@ async function turnMotorOff() {
     } catch (error) {
         console.error("Motor OFF error details:", error.message);
         button.textContent = "❌ Error (See Console)";
-    } finally {
-        setTimeout(() => {
-            button.disabled = false;
-            button.textContent = "Power off Motor";
-        }, 3000);
     }
 }
 
