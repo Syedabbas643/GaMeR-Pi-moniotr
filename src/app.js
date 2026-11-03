@@ -63,11 +63,6 @@ const sensorData = {
 let latestRange = null;
 let latestDetection = false;
 
-
-// ==========================================
-// OPEN SENSOR UART
-// ==========================================
-
 const sensorPort = new SerialPort({
   path: "/dev/ttyAMA0",
   baudRate: 115200,
@@ -80,11 +75,6 @@ const sensorParser = sensorPort.pipe(
   })
 );
 
-
-// ==========================================
-// READ SENSOR UART
-// ==========================================
-
 sensorParser.on("data", (line) => {
 
   line = line.trim();
@@ -92,10 +82,6 @@ sensorParser.on("data", (line) => {
   if (!line) {
     return;
   }
-
-  // -----------------------------
-  // HUMAN DETECTED
-  // -----------------------------
 
   if (line === "ON") {
 
@@ -106,11 +92,6 @@ sensorParser.on("data", (line) => {
 
     return;
   }
-
-
-  // -----------------------------
-  // HUMAN NOT DETECTED
-  // -----------------------------
 
   if (line === "OFF") {
 
@@ -123,12 +104,6 @@ sensorParser.on("data", (line) => {
 
     return;
   }
-
-
-  // -----------------------------
-  // RANGE
-  // Example: Range 113
-  // -----------------------------
 
   const match = line.match(/^Range\s+(\d+)$/);
 
@@ -183,88 +158,6 @@ app.get("/restartserver", (req, res) => {
       }
     });
   }, 500);
-});
-
-
-// ===============================
-// Tank Sensor
-// ===============================
-
-let latestTankData = {
-    distance_cm: null,
-    percentage: 0,
-    lastUpdate: null,
-    device: "tank_sensor"
-};
-
-function calculateTankPercentage(distanceCm) {
-
-    let percentage =
-        ((TANK_MAX_CM - distanceCm) /
-        (TANK_MAX_CM - TANK_MIN_CM)) * 100;
-
-    percentage = Math.max(0, Math.min(100, percentage));
-
-    return Number(percentage.toFixed(1));
-}
-
-// Receive distance from ESP8266
-
-app.post("/api/tank/distance", (req, res) => {
-
-    try {
-
-        const { device, distance_cm } = req.body;
-
-        if (
-            typeof distance_cm !== "number" ||
-            !Number.isFinite(distance_cm) ||
-            distance_cm < 0
-        ) {
-            return res.status(400).json({
-                ok: false,
-                error: "Invalid distance_cm"
-            });
-        }
-
-        const reading = {
-            device: device || "tank_sensor",
-
-            distance_cm: Number(distance_cm.toFixed(2)),
-
-            percentage: calculateTankPercentage(distance_cm),
-
-            lastUpdate: new Date().toISOString()
-        };
-
-        // Store latest reading
-        latestTankData = reading;
-
-        // Store reading history
-        tankReadings.push(reading);
-
-        if (tankReadings.length > MAX_TANK_READINGS) {
-            tankReadings.shift();
-        }
-
-        evaluateTankMotorControl(latestTankData.percentage);
-
-        res.json({
-            ok: true,
-            reading: latestTankData
-        });
-
-    } catch (error) {
-
-        console.error("Tank sensor error:", error);
-
-        res.status(500).json({
-            ok: false,
-            error: "Server error"
-        });
-
-    }
-
 });
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {
@@ -412,7 +305,7 @@ app.get("/api/netrunner", (req, res) => {
                 parseError
             );
 
-            response.netrunner.error = "Invalid response";
+            response.netrunner.error = "Invalid Tailscale response";
 
         }
 
@@ -420,11 +313,6 @@ app.get("/api/netrunner", (req, res) => {
         // ==========================================
         // 5. FINAL RESPONSE
         // ==========================================
-        Relaystatus((err) => {
-          if (err) {
-            //return res.status(500).json({ success: false, error: err.message });
-          }
-          });
 
         return res.json(response);
 
@@ -433,150 +321,25 @@ app.get("/api/netrunner", (req, res) => {
 });
 
 // ==========================================
-//  MOTOR ESP8266 CONTROL
+// MOTOR & TANK ESP8266 CONNECTION
 // ==========================================
 
-app.get('/motorrelay/status', (req, res) => {
-  Relaystatus((err) => {
-    if (err) {
-      return res.status(500).json({ success: false, error: err.message });
-    }
-    res.json({ success: true, message: 'Relay status got successfully' });
-  });
-});
+let latestTankData = {
+    distance_cm: null,
+    percentage: 0,
+    lastUpdate: null,
+    device: "tank_sensor"
+};
 
-// Express API endpoint for ON
-app.get('/motorrelay/on', (req, res) => {
+function calculateTankPercentage(distanceCm) {
 
-    turnRelayOn((err) => {
+    let percentage =
+        ((TANK_MAX_CM - distanceCm) /
+        (TANK_MAX_CM - TANK_MIN_CM)) * 100;
 
-        if (err) {
-            return res.status(500).json({
-                success: false,
-                error: err.message
-            });
-        }
+    percentage = Math.max(0, Math.min(100, percentage));
 
-        res.json({
-            success: true,
-            message: "Motor turned ON successfully"
-        });
-
-    });
-
-});
-
-app.get('/motorrelay/off', (req, res) => {
-
-    turnRelayOff((err) => {
-
-        if (err) {
-            return res.status(500).json({
-                success: false,
-                error: err.message
-            });
-        }
-
-        res.json({
-            success: true,
-            message: "Motor turned OFF successfully"
-        });
-
-    });
-
-});
-
-app.get('/motorrelay/history', (req, res) => {
-
-    res.json({
-        success: true,
-        motorStatus: motorState,
-
-        currentRun: motorCurrentRun ? {
-            ...motorCurrentRun,
-            runningTimeMs:
-                Date.now() - new Date(motorCurrentRun.startTime).getTime(),
-
-            runningTime: formatRunningTime(
-                Date.now() - new Date(motorCurrentRun.startTime).getTime()
-            )
-        } : null,
-
-        totalRecords: motorHistory.length,
-        history: motorHistory
-    });
-
-});
-
-function keepEspConnectionAlive() {
-
-    // Reset the 2-minute inactivity timer
-    //clearTimeout(espIdleTimer);
-
-    // Already connected or connection in progress
-    if (espConnected || espConnecting) {
-        //scheduleEspDisconnect();
-        return;
-    }
-
-    console.log("Connecting to ESP8266...");
-
-    const client = new net.Socket();
-
-    espClient = client;
-    espConnecting = true;
-
-    client.setTimeout(ESP_CONNECT_TIMEOUT);
-
-    client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
-
-        espConnecting = false;
-        espConnected = true;
-
-        console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
-
-    });
-
-    client.on("error", (err) => {
-
-        console.error("ESP8266 TCP error:", err.message);
-
-    });
-
-    client.on('data', (data) => {
-    const responseHex = data.toString('hex').toUpperCase();
-    const responseText = data.toString('utf8').trim();
-
-    console.log("--- ESP8266 Relay Response Received ---");
-    console.log("Hex:", responseHex);
-    console.log("Text:", responseText);
-});
-
-    client.on("timeout", () => {
-
-        console.log("ESP8266 connection timeout");
-
-        client.destroy();
-
-    });
-
-    client.on("close", () => {
-
-        console.log("ESP8266 TCP connection closed");
-
-        // Only update state if this is still the active socket
-        if (espClient === client) {
-
-            espClient = null;
-            espConnected = false;
-            espConnecting = false;
-
-        }
-
-    });
-
-    // Start inactivity timer
-    //scheduleEspDisconnect();
+    return Number(percentage.toFixed(1));
 }
 
 function formatRunningTime(milliseconds) {
@@ -666,6 +429,10 @@ function turnRelayOff(callback) {
 }
 
 function Relaystatus(callback) {
+    sendRelayCommand("FF", callback)
+}
+
+function sendRelayCommand(hexString, callback) {
 
     if (!espConnected || !espClient || !espClient.writable) {
 
@@ -674,7 +441,7 @@ function Relaystatus(callback) {
     }
 
     const buffer = Buffer.from(
-        "FF".replace(/\s+/g, ""),
+        hexString.replace(/\s+/g, ""),
         "hex"
     );
 
@@ -687,39 +454,138 @@ function Relaystatus(callback) {
         callback(null);
 
     });
+
 }
 
-function evaluateTankMotorControl(percentage) {
+app.post("/api/tank/distance", (req, res) => {
 
-    if (typeof percentage !== "number" || !Number.isFinite(percentage)) {
-        return;
-    }
+    try {
 
-    // Tank level is low: Start motor
-    if (percentage <= MOTOR_START_PERCENTAGE && motorState !== "ON") {
+        const { device, distance_cm } = req.body;
 
-        console.log(`Tank level ${percentage}%: Starting motor`);
+        if (
+            typeof distance_cm !== "number" ||
+            !Number.isFinite(distance_cm) ||
+            distance_cm < 0
+        ) {
+            return res.status(400).json({
+                ok: false,
+                error: "Invalid distance_cm"
+            });
+        }
 
-        turnRelayOn((err) => {
-            if (err) {
-                console.error("Automatic motor ON failed:", err.message);
-            }
+        const reading = {
+            device: device || "tank_sensor",
+
+            distance_cm: Number(distance_cm.toFixed(2)),
+
+            percentage: calculateTankPercentage(distance_cm),
+
+            lastUpdate: new Date().toISOString()
+        };
+
+        // Store latest reading
+        latestTankData = reading;
+
+        // Store reading history
+        tankReadings.push(reading);
+
+        if (tankReadings.length > MAX_TANK_READINGS) {
+            tankReadings.shift();
+        }
+
+        evaluateTankMotorControl(latestTankData.percentage);
+
+        res.json({
+            ok: true,
+            reading: latestTankData
+        });
+
+    } catch (error) {
+
+        console.error("Tank sensor error:", error);
+
+        res.status(500).json({
+            ok: false,
+            error: "Server error"
         });
 
     }
 
-    // Tank is nearly full: Stop motor
-    else if (percentage >= MOTOR_STOP_PERCENTAGE && motorState !== "OFF") {
+});
 
-        console.log(`Tank level ${percentage}%: Stopping motor`);
-
-        turnRelayOff((err) => {
-            if (err) {
-                console.error("Automatic motor OFF failed:", err.message);
-            }
-        });
+app.get('/motorrelay/status', (req, res) => {
+  Relaystatus((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: err.message });
     }
-}
+    res.json({ success: true, message: 'Relay status got successfully' });
+  });
+});
+
+app.get('/motorrelay/on', (req, res) => {
+
+    turnRelayOn((err) => {
+
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Motor turned ON successfully"
+        });
+
+    });
+
+});
+
+app.get('/motorrelay/off', (req, res) => {
+
+    turnRelayOff((err) => {
+
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Motor turned OFF successfully"
+        });
+
+    });
+
+});
+
+app.get('/motorrelay/history', (req, res) => {
+
+    res.json({
+        success: true,
+        motorStatus: motorState,
+
+        currentRun: motorCurrentRun ? {
+            ...motorCurrentRun,
+            runningTimeMs:
+                Date.now() - new Date(motorCurrentRun.startTime).getTime(),
+
+            runningTime: formatRunningTime(
+                Date.now() - new Date(motorCurrentRun.startTime).getTime()
+            )
+        } : null,
+
+        totalRecords: motorHistory.length,
+        history: motorHistory
+    });
+
+});
+
+
 
 
 
