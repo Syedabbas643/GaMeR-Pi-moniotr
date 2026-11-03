@@ -514,7 +514,7 @@ async function ServerRestart() {
 checkPCStatus();
 
   // Check every 1 seconds
-setInterval(checkPCStatus, 4000);
+setInterval(checkPCStatus, 2000);
 
 let charts = { cpu: null, ram: null, swap: null, net: null, tx: null, hddPie: null, sdPie: null };
 
