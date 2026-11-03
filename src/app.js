@@ -464,6 +464,84 @@ function Relaystatus(callback) {
     sendRelayCommand("FF", callback)
 }
 
+function keepEspConnectionAlive() {
+
+    // Reset the 2-minute inactivity timer
+    //clearTimeout(espIdleTimer);
+
+    // Already connected or connecting
+    if (espConnected || espConnecting) {
+        //scheduleEspDisconnect();
+        return;
+    }
+
+    console.log("Connecting to ESP8266...");
+
+    const client = new net.Socket();
+
+    espClient = client;
+    espConnecting = true;
+
+    client.setTimeout(ESP_CONNECT_TIMEOUT);
+
+    client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
+
+        if (espClient !== client) return;
+
+        espConnecting = false;
+        espConnected = true;
+
+        console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
+
+    });
+
+    client.on("data", (data) => {
+
+        console.log(
+            "ESP Response:",
+            data.toString("utf8").trim()
+        );
+
+    });
+
+    client.on("error", (err) => {
+
+        console.error("ESP TCP Error:", err.message);
+
+    });
+
+    client.on("close", () => {
+
+        if (espClient !== client) return;
+
+        console.log("ESP8266 TCP connection closed");
+
+        espClient = null;
+        espConnected = false;
+        espConnecting = false;
+
+    });
+
+    // Protect against a connection attempt that never completes
+    const connectionTimer = setTimeout(() => {
+
+        if (espClient === client && !espConnected) {
+
+            console.log("ESP connection establishment timed out");
+
+            client.destroy();
+
+        }
+
+    }, 5000);
+
+    client.once("connect", () => {
+        clearTimeout(connectionTimer);
+    });
+
+}
+
+
 function sendRelayCommand(hexString, callback) {
 
     if (!espConnected || !espClient || !espClient.writable) {
