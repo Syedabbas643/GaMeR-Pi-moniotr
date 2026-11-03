@@ -1,5 +1,7 @@
 const express = require("express");
 const net = require('net');
+const dgram = require("dgram");
+const os = require("os");
 const { NODE_ENV, PUBLIC_DIR, METRICS_INTERVAL_MS, DISABLE_SQLITE } = require("./config");
 const { createStatsCollector } = require("./stats");
 const { initDatabase, getHistory, execSql } = require("./db/sqlite");
@@ -26,9 +28,10 @@ function createApp() {
 
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
+const discovery = dgram.createSocket("udp4");
 
 // TODO: Replace with your ESP8266's actual IP address assigned by your router
-const MOTOR_ESP_IP = '192.168.1.7'; 
+const MOTOR_ESP_IP = '192.168.1.7';
 const MOTOR_ESP_PORT = 8080;
 const ESP_CONNECT_TIMEOUT = 30000;
 
@@ -49,6 +52,31 @@ let motorCurrentRun = null;
 let motorCommandPending = false;
 const MOTOR_START_PERCENTAGE = 20;
 const MOTOR_STOP_PERCENTAGE = 95;
+
+discovery.on("message", (msg, rinfo) => {
+    if (msg.toString().trim() === "WHO_IS_NETSERVER") {
+
+        const interfaces = os.networkInterfaces();
+        let piIP = "";
+
+        for (const name of Object.keys(interfaces)) {
+            for (const net of interfaces[name]) {
+                if (net.family === "IPv4" && !net.internal) {
+                    piIP = net.address;
+                    break;
+                }
+            }
+            if (piIP) break;
+        }
+
+        const reply = Buffer.from("NETSERVER:" + piIP);
+
+        discovery.send(reply, rinfo.port, rinfo.address);
+        console.log("Discovery request from:", rinfo.address);
+    }
+});
+
+discovery.bind(3001, "0.0.0.0");
 
 // ==========================================
 // HMMd S3KM1110 SENSOR
