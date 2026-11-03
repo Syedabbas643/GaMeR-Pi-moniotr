@@ -30,13 +30,20 @@ app.use(express.static(PUBLIC_DIR));
 // TODO: Replace with your ESP8266's actual IP address assigned by your router
 const MOTOR_ESP_IP = '192.168.1.7'; 
 const MOTOR_ESP_PORT = 8080;
-const ESP_IDLE_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 const ESP_CONNECT_TIMEOUT = 30000;
 
 let espClient = null;
 let espConnected = false;
 let espConnecting = false;
 let espIdleTimer = null;
+
+const TANK_MIN_CM = 30;
+
+// Sensor distance when tank is EMPTY
+const TANK_MAX_CM = 150;
+
+const tankReadings = [];
+const MAX_TANK_READINGS = 30;
 
 // ==========================================
 // HMMd S3KM1110 SENSOR
@@ -173,28 +180,42 @@ app.get("/restartserver", (req, res) => {
   }, 500);
 });
 
-// ==========================================
-// SENSOR API
-// ==========================================
 
-app.get("/api/sensor", (req, res) => {
-
-  res.json(sensorData);
-
-});
 // ===============================
 // Tank Sensor
 // ===============================
 
-const tankReadings = [];
-const MAX_TANK_READINGS = 30;
+let latestTankData = {
+    distance_cm: null,
+    percentage: 0,
+    lastUpdate: null,
+    device: "tank_sensor"
+};
+
+function calculateTankPercentage(distanceCm) {
+
+    let percentage =
+        ((TANK_MAX_CM - distanceCm) /
+        (TANK_MAX_CM - TANK_MIN_CM)) * 100;
+
+    percentage = Math.max(0, Math.min(100, percentage));
+
+    return Number(percentage.toFixed(1));
+}
 
 // Receive distance from ESP8266
+
 app.post("/api/tank/distance", (req, res) => {
+
     try {
+
         const { device, distance_cm } = req.body;
 
-        if (typeof distance_cm !== "number" || !isFinite(distance_cm)) {
+        if (
+            typeof distance_cm !== "number" ||
+            !Number.isFinite(distance_cm) ||
+            distance_cm < 0
+        ) {
             return res.status(400).json({
                 ok: false,
                 error: "Invalid distance_cm"
@@ -203,68 +224,43 @@ app.post("/api/tank/distance", (req, res) => {
 
         const reading = {
             device: device || "tank_sensor",
+
             distance_cm: Number(distance_cm.toFixed(2)),
+
+            percentage: calculateTankPercentage(distance_cm),
+
+            lastUpdate: new Date().toISOString()
         };
 
-        // Add newest reading
+        // Store latest reading
+        latestTankData = reading;
+
+        // Store reading history
         tankReadings.push(reading);
 
-        // Keep only last 30
         if (tankReadings.length > MAX_TANK_READINGS) {
             tankReadings.shift();
         }
 
         res.json({
             ok: true,
-            reading
+            reading: latestTankData
         });
 
     } catch (error) {
+
         console.error("Tank sensor error:", error);
 
         res.status(500).json({
             ok: false,
             error: "Server error"
         });
-    }
-});
-// Return tank statistics
-app.get("/api/tank/stats", (req, res) => {
 
-    const readings = tankReadings;
-
-    if (readings.length === 0) {
-        return res.json({
-            ok: true,
-            count: 0,
-            latest: null,
-            average: null,
-            minimum: null,
-            maximum: null,
-            readings: []
-        });
     }
 
-    const distances = readings.map(r => r.distance_cm);
-
-    const sum = distances.reduce((a, b) => a + b, 0);
-
-    res.json({
-        ok: true,
-
-        count: readings.length,
-
-        latest: readings[readings.length - 1],
-
-        average: Number((sum / distances.length).toFixed(2)),
-
-        minimum: Math.min(...distances),
-
-        maximum: Math.max(...distances),
-
-        readings: readings
-    });
 });
+
+
 app.get("/gpio17", (req, res) => {
     if (gpio17Busy) {
         return res.status(409).json({
@@ -331,6 +327,17 @@ app.get("/api/netrunner", (req, res) => {
             humanDetected: sensorData.humanDetected,
             rangeCm: sensorData.rangeCm,
             lastUpdate: sensorData.lastUpdate
+        },
+
+        tank: {
+            device: latestTankData.device,
+            distance_cm: latestTankData.distance_cm,
+            percentage: latestTankData.percentage,
+            lastUpdate: latestTankData.lastUpdate,
+            calibration: {
+                minimum_cm: TANK_MIN_CM,
+                maximum_cm: TANK_MAX_CM
+            }
         }
     };
 

@@ -342,6 +342,22 @@ async function checkPCStatus() {
     }
 
 
+    const tank = data.tank;
+
+        document.getElementById("tankPercentage").textContent =
+            tank.percentage + "%";
+
+        document.getElementById("tankDistance").textContent =
+            tank.distance_cm.toFixed(2) + " cm";
+
+        const arc = document.getElementById("tankGaugeArc");
+
+        const arcLength = 376.99;
+
+        arc.style.strokeDashoffset =
+            arcLength - (tank.percentage / 100 * arcLength);
+
+
   } catch (error) {
 
     console.error("PC status error:", error);
