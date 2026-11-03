@@ -653,16 +653,17 @@ function Relaystatus(callback) {
 
 function sendRelayCommand(hexString, callback) {
 
-    if (!espConnected || !espClient || !espClient.writable) {
-
+    if (!espConnected || !espClient || espClient.destroyed || !espClient.writable) {
         return callback(new Error("ESP8266 is not connected"));
-
     }
 
-    const buffer = Buffer.from(
-        hexString.replace(/\s+/g, ""),
-        "hex"
-    );
+    const cleanHex = hexString.replace(/\s+/g, "");
+
+    if (cleanHex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(cleanHex)) {
+        return callback(new Error("Invalid HEX command"));
+    }
+
+    const buffer = Buffer.from(cleanHex, "hex");
 
     espClient.write(buffer, (err) => {
 
@@ -673,7 +674,6 @@ function sendRelayCommand(hexString, callback) {
         callback(null);
 
     });
-
 }
 
 app.post("/api/tank/distance", (req, res) => {
