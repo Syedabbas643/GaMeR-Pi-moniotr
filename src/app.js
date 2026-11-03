@@ -429,7 +429,7 @@ function setMotorState(targetState, callback = () => {}) {
         return callback(new Error("Motor command already in progress"));
     }
 
-    if (motorState === targetState) {
+    if (motorrelayStatus === targetState) {
         return callback(null);
     }
 
@@ -482,8 +482,6 @@ function setMotorState(targetState, callback = () => {}) {
                 motorCurrentRun = null;
             }
         }
-
-        motorState = targetState;
 
         console.log(`Motor turned ${targetState}`);
 
