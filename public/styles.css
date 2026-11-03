@@ -854,7 +854,7 @@ canvas {
   #tankPercentage {
     font-size: clamp(20px, 8vw, 22px);
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 0.8;
 }
 
 }
