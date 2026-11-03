@@ -352,6 +352,38 @@ function formatRunningTime(milliseconds) {
     return `${hours}h ${minutes}m ${seconds}s`;
 }
 
+function evaluateTankMotorControl(percentage) {
+
+    if (typeof percentage !== "number" || !Number.isFinite(percentage)) {
+        return;
+    }
+
+    // Tank level is low: Start motor
+    if (percentage <= MOTOR_START_PERCENTAGE && motorState !== "ON") {
+
+        console.log(`Tank level ${percentage}%: Starting motor`);
+
+        turnRelayOn((err) => {
+            if (err) {
+                console.error("Automatic motor ON failed:", err.message);
+            }
+        });
+
+    }
+
+    // Tank is nearly full: Stop motor
+    else if (percentage >= MOTOR_STOP_PERCENTAGE && motorState !== "OFF") {
+
+        console.log(`Tank level ${percentage}%: Stopping motor`);
+
+        turnRelayOff((err) => {
+            if (err) {
+                console.error("Automatic motor OFF failed:", err.message);
+            }
+        });
+    }
+}
+
 function setMotorState(targetState, callback = () => {}) {
 
     if (motorCommandPending) {
