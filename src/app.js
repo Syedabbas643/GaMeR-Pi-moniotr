@@ -530,6 +530,9 @@ function keepEspConnectionAlive() {
     client.on("error", (err) => {
 
         console.error("ESP TCP Error:", err.message);
+        espClient = null;
+        espConnected = false;
+        espConnecting = false;
 
     });
 
