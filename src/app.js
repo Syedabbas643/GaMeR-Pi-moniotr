@@ -415,16 +415,12 @@ app.get("/api/netrunner", (req, res) => {
 
 });
 
-// ==========================================
-// ESP8266 CONNECTION MANAGER
-// ==========================================
-
 function keepEspConnectionAlive() {
 
     // Reset the 2-minute inactivity timer
     clearTimeout(espIdleTimer);
 
-    // Already connected or connection in progress
+    // Already connected or connecting
     if (espConnected || espConnecting) {
         scheduleEspDisconnect();
         return;
@@ -437,58 +433,68 @@ function keepEspConnectionAlive() {
     espClient = client;
     espConnecting = true;
 
-    client.setTimeout(ESP_CONNECT_TIMEOUT);
+    // Do NOT use client.setTimeout() here.
+    // An idle TCP connection is expected.
 
     client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
+
+        if (espClient !== client) return;
 
         espConnecting = false;
         espConnected = true;
 
         console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
 
+        scheduleEspDisconnect();
+
+    });
+
+    client.on("data", (data) => {
+
+        console.log(
+            "ESP Response:",
+            data.toString("utf8").trim()
+        );
+
     });
 
     client.on("error", (err) => {
 
-        console.error("ESP8266 TCP error:", err.message);
-
-    });
-
-    client.on('data', (data) => {
-    const responseHex = data.toString('hex').toUpperCase();
-    const responseText = data.toString('utf8').trim();
-
-    console.log("--- ESP8266 Relay Response Received ---");
-    console.log("Hex:", responseHex);
-    console.log("Text:", responseText);
-});
-
-    client.on("timeout", () => {
-
-        console.log("ESP8266 connection timeout");
-
-        client.destroy();
+        console.error("ESP TCP Error:", err.message);
 
     });
 
     client.on("close", () => {
 
+        if (espClient !== client) return;
+
         console.log("ESP8266 TCP connection closed");
 
-        // Only update state if this is still the active socket
-        if (espClient === client) {
-
-            espClient = null;
-            espConnected = false;
-            espConnecting = false;
-
-        }
+        espClient = null;
+        espConnected = false;
+        espConnecting = false;
 
     });
 
-    // Start inactivity timer
-    scheduleEspDisconnect();
+    // Protect against a connection attempt that never completes
+    const connectionTimer = setTimeout(() => {
+
+        if (espClient === client && !espConnected) {
+
+            console.log("ESP connection establishment timed out");
+
+            client.destroy();
+
+        }
+
+    }, 5000);
+
+    client.once("connect", () => {
+        clearTimeout(connectionTimer);
+    });
+
 }
+
 
 
 // ==========================================
