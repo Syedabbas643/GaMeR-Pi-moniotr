@@ -369,19 +369,29 @@ async function checkPCStatus() {
                 Number(tank.distance_cm).toFixed(2) + " cm";
         }
 
-        if (tank.motorstatus != null){
+        if (tank.motorstatus != null) {
 
-          if(tank.motorstatus == "ON"){
-              const button = document.getElementById("motorOnBtn");
-              button.disabled = true;
-          }
+            const onButton = document.getElementById("motorOnBtn");
+            const offButton = document.getElementById("motorOffBtn");
+            const status = document.getElementById("motorStatus");
 
-          if(tank.motorstatus == "OFF"){
-              const button = document.getElementById("motorOffBtn");
-              button.disabled = true;
-          }
+            if (tank.motorstatus === "ON") {
 
-          document.getElementById("motorStatus").textContent ="MOTOR : " + tank.motorstatus;
+                onButton.disabled = true;
+                offButton.disabled = false;
+
+                status.style.color = "red";
+
+            } 
+            else if (tank.motorstatus === "OFF") {
+
+                onButton.disabled = false;
+                offButton.disabled = true;
+
+                status.style.color = "green";
+            }
+
+            status.textContent = "MOTOR : " + tank.motorstatus;
         }
     }
 
