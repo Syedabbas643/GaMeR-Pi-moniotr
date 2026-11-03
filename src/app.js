@@ -30,6 +30,13 @@ app.use(express.static(PUBLIC_DIR));
 // TODO: Replace with your ESP8266's actual IP address assigned by your router
 const MOTOR_ESP_IP = '192.168.1.7'; 
 const MOTOR_ESP_PORT = 8080;
+const ESP_IDLE_TIMEOUT = 2 * 60 * 1000; // 2 minutes
+const ESP_CONNECT_TIMEOUT = 5000;
+
+let espClient = null;
+let espConnected = false;
+let espConnecting = false;
+let espIdleTimer = null;
 
 // ==========================================
 // HMMd S3KM1110 SENSOR
@@ -304,6 +311,8 @@ app.get("/gpio17", (req, res) => {
   });
 app.get("/api/netrunner", (req, res) => {
 
+    keepEspConnectionAlive();
+
     // ==========================================
     // 1. DEFAULT RESPONSE
     // ==========================================
@@ -408,49 +417,152 @@ app.get("/api/netrunner", (req, res) => {
 
 });
 
-// Create a persistent TCP client connection
-const espClient = new net.Socket();
+// ==========================================
+// ESP8266 CONNECTION MANAGER
+// ==========================================
 
-function connectToESP() {
-  console.log(`Connecting to ESP8266 at ${MOTOR_ESP_IP}:${MOTOR_ESP_PORT}...`);
-  espClient.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
-    console.log('✅ Connected to ESP8266 TCP server!');
-  });
+function keepEspConnectionAlive() {
 
-  espClient.on('error', (err) => {
-    console.error('ESP TCP Error:', err.message);
-  });
+    // Reset the 2-minute inactivity timer
+    clearTimeout(espIdleTimer);
 
-  espClient.on('close', () => {
-    console.log('⚠️ ESP connection closed. Reconnecting in 3 seconds...');
-    setTimeout(connectToESP, 3000);
-  });
+    // Already connected or connection in progress
+    if (espConnected || espConnecting) {
+        scheduleEspDisconnect();
+        return;
+    }
+
+    console.log("Connecting to ESP8266...");
+
+    const client = new net.Socket();
+
+    espClient = client;
+    espConnecting = true;
+
+    client.setTimeout(ESP_CONNECT_TIMEOUT);
+
+    client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
+
+        espConnecting = false;
+        espConnected = true;
+
+        console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
+
+    });
+
+    client.on("error", (err) => {
+
+        console.error("ESP8266 TCP error:", err.message);
+
+    });
+
+    client.on('data', (data) => {
+    const responseHex = data.toString('hex').toUpperCase();
+    const responseText = data.toString('utf8').trim();
+
+    console.log("--- ESP8266 Relay Response Received ---");
+    console.log("Hex:", responseHex);
+    console.log("Text:", responseText);
+});
+
+    client.on("timeout", () => {
+
+        console.log("ESP8266 connection timeout");
+
+        client.destroy();
+
+    });
+
+    client.on("close", () => {
+
+        console.log("ESP8266 TCP connection closed");
+
+        // Only update state if this is still the active socket
+        if (espClient === client) {
+
+            espClient = null;
+            espConnected = false;
+            espConnecting = false;
+
+        }
+
+    });
+
+    // Start inactivity timer
+    scheduleEspDisconnect();
 }
 
-// Establish the persistent connection on startup
-connectToESP();
 
-// Helper function to send hex commands over the open connection
-function sendCommand(hexString, callback) {
-  if (!espClient.writable) {
-    return callback(new Error('Not connected to ESP8266 yet. Try again in a moment.'));
-  }
+// ==========================================
+// 2-MINUTE INACTIVITY TIMER
+// ==========================================
 
-  const buffer = Buffer.from(hexString.replace(/\s+/g, ''), 'hex');
-  espClient.write(buffer, (err) => {
-    callback(err);
-  });
+function scheduleEspDisconnect() {
+
+    clearTimeout(espIdleTimer);
+
+    espIdleTimer = setTimeout(() => {
+
+        console.log("ESP8266 idle for 2 minutes. Disconnecting...");
+
+        if (espClient) {
+            espClient.destroy();
+        }
+
+        espClient = null;
+        espConnected = false;
+        espConnecting = false;
+
+    }, ESP_IDLE_TIMEOUT);
+
 }
 
-// Function 1: Turn Relay ON
+
+function sendRelayCommand(hexString, callback) {
+
+    if (!espConnected || !espClient || !espClient.writable) {
+
+        return callback(new Error("ESP8266 is not connected"));
+
+    }
+
+    const buffer = Buffer.from(
+        hexString.replace(/\s+/g, ""),
+        "hex"
+    );
+
+    espClient.write(buffer, (err) => {
+
+        if (err) {
+            return callback(err);
+        }
+
+        callback(null);
+
+    });
+
+}
+
 function turnRelayOn(callback) {
-  sendCommand('A0 01 01 A2', callback);
+    sendRelayCommand("A0 01 01 A2", callback);
 }
 
-// Function 2: Turn Relay OFF
 function turnRelayOff(callback) {
-  sendCommand('A0 01 00 A1', callback);
+    sendRelayCommand("A0 01 00 A1", callback);
 }
+
+function Relaystatus(callback) {
+    sendRelayCommand("FF", callback);
+}
+
+app.get('/motorrelay/status', (req, res) => {
+  Relaystatus((err) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    res.json({ success: true, message: 'Relay status got successfully' });
+  });
+});
 
 // Express API endpoint for ON
 app.get('/motorrelay/on', (req, res) => {
@@ -471,6 +583,8 @@ app.get('/motorrelay/off', (req, res) => {
     res.json({ success: true, message: 'Relay turned OFF successfully' });
   });
 });
+
+
 
 
 

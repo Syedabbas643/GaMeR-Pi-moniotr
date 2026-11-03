@@ -217,21 +217,7 @@ h1 {
    PC POWER BUTTON
 ========================= */
 
-#powerOnBtn {
-  margin-top: 15px;
-
-  padding: 10px 18px;
-
-  border: none;
-
-  border-radius: 8px;
-
-  cursor: pointer;
-
-  font-size: 14px;
-}
-
-#serverBtn {
+.Buttonstyle{
   margin-top: 15px;
 
   padding: 10px 18px;
