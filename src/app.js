@@ -412,7 +412,7 @@ app.get("/api/netrunner", (req, res) => {
                 parseError
             );
 
-            response.netrunner.error = "Invalid Tailscale response";
+            response.netrunner.error = "Invalid response";
 
         }
 
@@ -420,7 +420,8 @@ app.get("/api/netrunner", (req, res) => {
         // ==========================================
         // 5. FINAL RESPONSE
         // ==========================================
-
+        Relaystatus();
+        
         return res.json(response);
 
     });
