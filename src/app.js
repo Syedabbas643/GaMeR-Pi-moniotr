@@ -31,6 +31,9 @@ app.use(express.static(PUBLIC_DIR));
 const discovery = dgram.createSocket("udp4");
 
 // TODO: Replace with your ESP8266's actual IP address assigned by your router
+
+const ESP_HEARTBEAT_INTERVAL = 4000; // Send FF every 5 seconds
+const ESP_RESPONSE_TIMEOUT = 10000;  // Disconnect if no response for 15 seconds
 const MOTOR_ESP_IP = '192.168.1.7';
 const MOTOR_ESP_PORT = 8080;
 const ESP_CONNECT_TIMEOUT = 30000;
@@ -39,6 +42,9 @@ let espClient = null;
 let espConnected = false;
 let espConnecting = false;
 let espIdleTimer = null;
+let espHeartbeatTimer = null;
+let lastEspResponseAt = 0;
+let lastEspHeartbeatAt = 0;
 
 const TANK_MIN_CM = 30;
 const TANK_MAX_CM = 150;
@@ -417,6 +423,8 @@ function evaluateTankMotorControl(percentage) {
 
 function setMotorState(targetState, callback = () => {}) {
 
+    keepEspConnectionAlive()
+
     if (motorCommandPending) {
         return callback(new Error("Motor command already in progress"));
     }
@@ -485,7 +493,7 @@ function setMotorState(targetState, callback = () => {}) {
 
 function keepEspConnectionAlive() {
 
-     if (espConnected || espConnecting) {
+    if (espConnected || espConnecting) {
         return;
     }
 
@@ -496,8 +504,10 @@ function keepEspConnectionAlive() {
     espClient = client;
     espConnecting = true;
 
-    client.setTimeout(ESP_CONNECT_TIMEOUT);
+    client.setNoDelay(true);
+    client.setKeepAlive(true, 5000);
 
+    // Connect to ESP8266
     client.connect(MOTOR_ESP_PORT, MOTOR_ESP_IP, () => {
 
         if (espClient !== client) return;
@@ -505,34 +515,76 @@ function keepEspConnectionAlive() {
         espConnecting = false;
         espConnected = true;
 
+        lastEspResponseAt = Date.now();
+        lastEspHeartbeatAt = 0;
+
         console.log("ESP8266 TCP connected:", MOTOR_ESP_IP);
+
+        // Heartbeat monitoring
+        espHeartbeatTimer = setInterval(() => {
+
+            if (espClient !== client || !espConnected) {
+                return;
+            }
+
+            const now = Date.now();
+
+            // Check whether ESP is responding
+            if (now - lastEspResponseAt > ESP_RESPONSE_TIMEOUT) {
+
+                console.log("ESP8266 not responding. Destroying stale connection.");
+
+                client.destroy();
+                return;
+            }
+
+            // Send FF heartbeat every 5 seconds
+            if (now - lastEspHeartbeatAt >= ESP_HEARTBEAT_INTERVAL) {
+
+                lastEspHeartbeatAt = now;
+
+                client.write(Buffer.from([0xFF]), (err) => {
+
+                    if (err) {
+                        console.error("ESP heartbeat failed:", err.message);
+                        client.destroy();
+                    }
+
+                });
+            }
+
+        }, ESP_HEARTBEAT_INTERVAL);
 
     });
 
-    espClient.on("data", (data) => {
+    // Receive ESP responses
+    client.on("data", (data) => {
 
-    motorrelayResponseBuffer += data.toString();
+        if (espClient !== client) return;
 
-    const lines = motorrelayResponseBuffer.split(/\r?\n/);
-    motorrelayResponseBuffer = lines.pop();
+        lastEspResponseAt = Date.now();
 
-    for (const line of lines) {
+        motorrelayResponseBuffer += data.toString();
 
-        if (line.includes("RELAY:ON")) {
-            motorrelayStatus = "ON";
+        const lines = motorrelayResponseBuffer.split(/\r?\n/);
+        motorrelayResponseBuffer = lines.pop();
+
+        for (const line of lines) {
+
+            if (line.includes("RELAY:ON")) {
+                motorrelayStatus = "ON";
+            }
+            else if (line.includes("RELAY:OFF")) {
+                motorrelayStatus = "OFF";
+            }
+
         }
-        else if (line.includes("RELAY:OFF")) {
-            motorrelayStatus = "OFF";
-        }
-    }
-});
+
+    });
 
     client.on("error", (err) => {
 
         console.error("ESP TCP Error:", err.message);
-        espClient = null;
-        espConnected = false;
-        espConnecting = false;
 
     });
 
@@ -542,13 +594,18 @@ function keepEspConnectionAlive() {
 
         console.log("ESP8266 TCP connection closed");
 
+        clearInterval(espHeartbeatTimer);
+        espHeartbeatTimer = null;
+
         espClient = null;
         espConnected = false;
         espConnecting = false;
 
+        motorrelayResponseBuffer = "";
+
     });
 
-    // Protect against a connection attempt that never completes
+    // Connection establishment timeout
     const connectionTimer = setTimeout(() => {
 
         if (espClient === client && !espConnected) {
