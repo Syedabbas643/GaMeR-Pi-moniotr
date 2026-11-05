@@ -46,15 +46,15 @@ let espHeartbeatTimer = null;
 let lastEspResponseAt = 0;
 let lastEspHeartbeatAt = 0;
 
-const TANK_MIN_CM = 30;
-const TANK_MAX_CM = 150;
+const TANK_MIN_CM = 20;
+const TANK_MAX_CM = 75;
 const tankReadings = [];
 const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
-const MOTOR_START_PERCENTAGE = 20;
-const MOTOR_STOP_PERCENTAGE = 95;
+const MOTOR_START_PERCENTAGE = 10;
+const MOTOR_STOP_PERCENTAGE = 90;
 let motorState = "UNKNOWN";
 let motorCurrentRun = null;
 let motorCommandPending = false;
