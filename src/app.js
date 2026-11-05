@@ -55,6 +55,9 @@ const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
 const MOTOR_START_PERCENTAGE = 10;
 const MOTOR_STOP_PERCENTAGE = 90;
+let motorSafetyTimer = null;
+let motorRunTimedOut = false;
+const MOTOR_MAX_RUNTIME = 10 * 60 * 1000; // 10 minutes
 let motorState = "UNKNOWN";
 let motorCurrentRun = null;
 let motorCommandPending = false;
@@ -376,7 +379,7 @@ function calculateTankPercentage(distanceCm) {
 
     percentage = Math.max(0, Math.min(100, percentage));
 
-    return Number(percentage.toFixed(1));
+    return Number(percentage.toFixed(0));
 }
 
 function formatRunningTime(milliseconds) {
@@ -384,9 +387,8 @@ function formatRunningTime(milliseconds) {
 
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
 
-    return `${hours}h ${minutes}m ${seconds}s`;
+    return `${hours}h ${minutes}m`;
 }
 
 function evaluateTankMotorControl(percentage) {
@@ -395,23 +397,65 @@ function evaluateTankMotorControl(percentage) {
         return;
     }
 
+    // Reset timeout lock when tank level rises above start threshold
+    if (percentage > MOTOR_START_PERCENTAGE) {
+        motorRunTimedOut = false;
+    }
+
     // Tank level is low: Start motor
-    if (percentage <= MOTOR_START_PERCENTAGE && motorState !== "ON") {
+    if (
+        percentage <= MOTOR_START_PERCENTAGE &&
+        motorState !== "ON" &&
+        !motorRunTimedOut
+    ) {
 
         console.log(`Tank level ${percentage}%: Starting motor`);
 
         turnRelayOn((err) => {
+
             if (err) {
                 console.error("Automatic motor ON failed:", err.message);
+                return;
             }
+
+            // Clear any previous safety timer
+            clearTimeout(motorSafetyTimer);
+
+            console.log("Motor safety timer started: 10 minutes");
+
+            motorSafetyTimer = setTimeout(() => {
+
+                console.log("10-minute runtime reached! Stopping motor.");
+
+                // Prevent automatic restart while tank remains low
+                motorRunTimedOut = true;
+
+                turnRelayOff((err) => {
+
+                    if (err) {
+                        console.error("Safety motor OFF failed:", err.message);
+                    } else {
+                        console.log("Motor stopped by safety timer.");
+                    }
+
+                });
+
+            }, MOTOR_MAX_RUNTIME);
+
         });
 
     }
 
     // Tank is nearly full: Stop motor
-    else if (percentage >= MOTOR_STOP_PERCENTAGE && motorState !== "OFF") {
+    else if (
+        percentage >= MOTOR_STOP_PERCENTAGE &&
+        motorState !== "OFF"
+    ) {
 
         console.log(`Tank level ${percentage}%: Stopping motor`);
+
+        clearTimeout(motorSafetyTimer);
+        motorSafetyTimer = null;
 
         turnRelayOff((err) => {
             if (err) {
