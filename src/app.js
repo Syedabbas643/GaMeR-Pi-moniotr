@@ -47,7 +47,7 @@ let lastEspResponseAt = 0;
 let lastEspHeartbeatAt = 0;
 
 const TANK_MIN_CM = 20;
-const TANK_MAX_CM = 75;
+const TANK_MAX_CM = 80;
 const tankReadings = [];
 const MAX_TANK_READINGS = 30;
 
@@ -57,7 +57,7 @@ const MOTOR_START_PERCENTAGE = 10;
 const MOTOR_STOP_PERCENTAGE = 90;
 let motorSafetyTimer = null;
 let motorRunTimedOut = false;
-const MOTOR_MAX_RUNTIME = 10 * 60 * 1000; // 10 minutes
+const MOTOR_MAX_RUNTIME = 2 * 60 * 1000; // 10 minutes
 let motorState = "UNKNOWN";
 let motorCurrentRun = null;
 let motorCommandPending = false;
@@ -161,6 +161,34 @@ sensorParser.on("data", (line) => {
   }
 });
 
+app.use((req, res, next) => {
+
+    const startTime = Date.now();
+
+    console.log("\n================================");
+    console.log("INCOMING REQUEST");
+    console.log("================================");
+
+    console.log("Time:", new Date().toLocaleString());
+    console.log("Method:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("IP:", req.ip);
+    console.log("Headers:", req.headers);
+
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log("Body:", req.body);
+    }
+
+    res.on("finish", () => {
+
+        console.log("Status:", res.statusCode);
+        console.log("Duration:", Date.now() - startTime, "ms");
+
+        console.log("================================\n");
+    });
+
+    next();
+});
 app.get("/metrics", async (req, res) => {
     try {
       res.setHeader("Content-Type", prom.register.contentType || "text/plain");
