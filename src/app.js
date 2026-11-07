@@ -53,7 +53,7 @@ const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
-const MOTOR_START_PERCENTAGE = 10;
+const MOTOR_START_PERCENTAGE = 50;
 const MOTOR_STOP_PERCENTAGE = 90;
 let motorSafetyTimer = null;
 let motorRunTimedOut = false;
