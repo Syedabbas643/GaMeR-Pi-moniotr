@@ -161,34 +161,36 @@ sensorParser.on("data", (line) => {
   }
 });
 
-app.use((req, res, next) => {
+// app.use((req, res, next) => {
 
-    const startTime = Date.now();
+//     const startTime = Date.now();
 
-    console.log("\n================================");
-    console.log("INCOMING REQUEST");
-    console.log("================================");
+//     console.log("\n================================");
+//     console.log("INCOMING REQUEST");
+//     console.log("================================");
 
-    console.log("Time:", new Date().toLocaleString());
-    console.log("Method:", req.method);
-    console.log("URL:", req.originalUrl);
-    console.log("IP:", req.ip);
-    console.log("Headers:", req.headers);
+//     console.log("Time:", new Date().toLocaleString());
+//     console.log("Method:", req.method);
+//     console.log("URL:", req.originalUrl);
+//     console.log("IP:", req.ip);
+//     console.log("Headers:", req.headers);
 
-    if (req.body && Object.keys(req.body).length > 0) {
-        console.log("Body:", req.body);
-    }
+//     if (req.body && Object.keys(req.body).length > 0) {
+//         console.log("Body:", req.body);
+//     }
 
-    res.on("finish", () => {
+//     res.on("finish", () => {
 
-        console.log("Status:", res.statusCode);
-        console.log("Duration:", Date.now() - startTime, "ms");
+//         console.log("Status:", res.statusCode);
+//         console.log("Duration:", Date.now() - startTime, "ms");
 
-        console.log("================================\n");
-    });
+//         console.log("================================\n");
+//     });
 
-    next();
-});
+//     next();
+// });
+
+
 app.get("/metrics", async (req, res) => {
     try {
       res.setHeader("Content-Type", prom.register.contentType || "text/plain");
@@ -745,6 +747,10 @@ function sendRelayCommand(hexString, callback) {
 
     });
 }
+
+setInterval(() => {
+    console.log("SERVER HEARTBEAT:", new Date().toISOString());
+}, 1000);
 
 app.post("/api/tank/distance", (req, res) => {
 
