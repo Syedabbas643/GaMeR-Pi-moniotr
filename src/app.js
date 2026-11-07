@@ -748,10 +748,6 @@ function sendRelayCommand(hexString, callback) {
     });
 }
 
-setInterval(() => {
-    console.log("SERVER HEARTBEAT:", new Date().toISOString());
-}, 1000);
-
 app.post("/api/tank/distance", (req, res) => {
 
     const receivedAt = Date.now();
