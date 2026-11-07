@@ -754,6 +754,9 @@ setInterval(() => {
 
 app.post("/api/tank/distance", (req, res) => {
 
+    const receivedAt = Date.now();
+    const requestId = Math.random().toString(36).slice(2, 8);
+
     try {
 
         const { device, distance_cm } = req.body;
@@ -771,30 +774,33 @@ app.post("/api/tank/distance", (req, res) => {
 
         const reading = {
             device: device || "tank_sensor",
-
             distance_cm: Number(distance_cm.toFixed(2)),
-
             percentage: calculateTankPercentage(distance_cm),
-
             lastUpdate: new Date().toISOString()
         };
 
-        // Store latest reading
         latestTankData = reading;
 
-        // Store reading history
         tankReadings.push(reading);
 
         if (tankReadings.length > MAX_TANK_READINGS) {
             tankReadings.shift();
         }
 
-        evaluateTankMotorControl(latestTankData.percentage);
+        const motorStart = Date.now();
+
+        evaluateTankMotorControl(reading.percentage);
+
+        const motorDuration = Date.now() - motorStart;
 
         res.json({
             ok: true,
             reading: latestTankData
         });
+
+        console.log(
+            `[${requestId}] RESPONSE SENT | Total: ${Date.now() - receivedAt}ms | Motor: ${motorDuration}ms`
+        );
 
     } catch (error) {
 
