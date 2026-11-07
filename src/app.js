@@ -53,11 +53,11 @@ const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
-const MOTOR_START_PERCENTAGE = 50;
+const MOTOR_START_PERCENTAGE = 20;
 const MOTOR_STOP_PERCENTAGE = 90;
 let motorSafetyTimer = null;
 let motorRunTimedOut = false;
-const MOTOR_MAX_RUNTIME = 2 * 60 * 1000; // 10 minutes
+const MOTOR_MAX_RUNTIME = 10 * 60 * 1000; // 10 minutes
 let motorState = "UNKNOWN";
 let motorCurrentRun = null;
 let motorCommandPending = false;
