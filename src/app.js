@@ -34,7 +34,7 @@ const discovery = dgram.createSocket("udp4");
 
 const ESP_HEARTBEAT_INTERVAL = 4000; // Send FF every 5 seconds
 const ESP_RESPONSE_TIMEOUT = 10000;  // Disconnect if no response for 15 seconds
-const MOTOR_ESP_IP = '192.168.1.7';
+const MOTOR_ESP_IP = '192.168.1.54';
 const MOTOR_ESP_PORT = 8080;
 const ESP_CONNECT_TIMEOUT = 30000;
 
