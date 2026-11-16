@@ -28,7 +28,6 @@ function createApp() {
 
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
-const discovery = dgram.createSocket("udp4");
 
 // TODO: Replace with your ESP8266's actual IP address assigned by your router
 
@@ -47,14 +46,14 @@ let lastEspResponseAt = 0;
 let lastEspHeartbeatAt = 0;
 
 const TANK_MIN_CM = 20;
-const TANK_MAX_CM = 80;
+const TANK_MAX_CM = 100;
 const tankReadings = [];
 const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
 const MOTOR_START_PERCENTAGE = 20;
-const MOTOR_STOP_PERCENTAGE = 90;
+const MOTOR_STOP_PERCENTAGE = 95;
 let motorSafetyTimer = null;
 let motorRunTimedOut = false;
 const MOTOR_MAX_RUNTIME = 10 * 60 * 1000; // 10 minutes
@@ -64,30 +63,7 @@ let motorCommandPending = false;
 let motorrelayStatus = "UNKNOWN";
 let motorrelayResponseBuffer = "";
 
-discovery.on("message", (msg, rinfo) => {
-    if (msg.toString().trim() === "WHO_IS_NETSERVER") {
-
-        const interfaces = os.networkInterfaces();
-        let piIP = "";
-
-        for (const name of Object.keys(interfaces)) {
-            for (const net of interfaces[name]) {
-                if (net.family === "IPv4" && !net.internal) {
-                    piIP = net.address;
-                    break;
-                }
-            }
-            if (piIP) break;
-        }
-
-        const reply = Buffer.from("NETSERVER:" + piIP);
-
-        discovery.send(reply, rinfo.port, rinfo.address);
-        console.log("Discovery request from:", rinfo.address);
-    }
-});
-
-discovery.bind(3001, "0.0.0.0");
+const MAX_RANGE_CM = 280;
 
 // ==========================================
 // HMMd S3KM1110 SENSOR
@@ -102,6 +78,27 @@ const sensorData = {
 let latestRange = null;
 let latestDetection = false;
 
+// ==========================================
+// SENSOR CONFIGURATION HEX COMMAND
+// ==========================================
+
+// Maximum distance gate = 4 (approximately 280 cm)
+// Target disappearance delay = 3 seconds
+
+const sensorConfig = Buffer.from(
+  "FDFCFBFA" +
+  "0E00" +
+  "0700" +
+  "010004000000" +
+  "040003000000" +
+  "04030201",
+  "hex"
+);
+
+// ==========================================
+// SERIAL PORT
+// ==========================================
+
 const sensorPort = new SerialPort({
   path: "/dev/ttyAMA0",
   baudRate: 115200,
@@ -114,13 +111,48 @@ const sensorParser = sensorPort.pipe(
   })
 );
 
+// ==========================================
+// APPLY SENSOR CONFIGURATION
+// ==========================================
+
+sensorPort.on("open", () => {
+
+  console.log("[HMMd] Sensor UART connected");
+
+  setTimeout(() => {
+
+    sensorPort.write(sensorConfig, (err) => {
+
+      if (err) {
+        console.error("[HMMd] Configuration failed:", err.message);
+        return;
+      }
+
+      sensorPort.drain(() => {
+        console.log("[HMMd] Configuration command sent");
+        console.log("[HMMd] Disappearance delay: 3 seconds");
+        console.log("[HMMd] Maximum distance: 280 cm");
+      });
+
+    });
+
+  }, 500);
+
+});
+
+sensorPort.on("error", (err) => {
+  console.error("[HMMd] Serial error:", err.message);
+});
+
+// ==========================================
+// SENSOR DATA PROCESSING
+// ==========================================
+
 sensorParser.on("data", (line) => {
 
   line = line.trim();
 
-  if (!line) {
-    return;
-  }
+  if (!line) return;
 
   if (line === "ON") {
 
@@ -150,7 +182,8 @@ sensorParser.on("data", (line) => {
 
     const value = Number(match[1]);
 
-    if (value >= 0 && value <= 500) {
+    // Accept only readings up to 280 cm
+    if (value >= 0 && value <= MAX_RANGE_CM) {
 
       latestRange = value;
 
@@ -158,37 +191,12 @@ sensorParser.on("data", (line) => {
       sensorData.lastUpdate = Date.now();
 
     }
+
+    // Ignore readings above 280 cm
   }
+
 });
 
-// app.use((req, res, next) => {
-
-//     const startTime = Date.now();
-
-//     console.log("\n================================");
-//     console.log("INCOMING REQUEST");
-//     console.log("================================");
-
-//     console.log("Time:", new Date().toLocaleString());
-//     console.log("Method:", req.method);
-//     console.log("URL:", req.originalUrl);
-//     console.log("IP:", req.ip);
-//     console.log("Headers:", req.headers);
-
-//     if (req.body && Object.keys(req.body).length > 0) {
-//         console.log("Body:", req.body);
-//     }
-
-//     res.on("finish", () => {
-
-//         console.log("Status:", res.statusCode);
-//         console.log("Duration:", Date.now() - startTime, "ms");
-
-//         console.log("================================\n");
-//     });
-
-//     next();
-// });
 
 
 app.get("/metrics", async (req, res) => {
