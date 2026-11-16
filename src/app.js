@@ -191,7 +191,7 @@ if (match) {
         sensorData.lastUpdate = Date.now();
 
         // Hand gesture detection: 10 cm or closer
-        if (value <= 10 && !nearTriggerLatched) {
+        if (value <= 15 && !nearTriggerLatched) {
 
             nearTriggerLatched = true;
 
