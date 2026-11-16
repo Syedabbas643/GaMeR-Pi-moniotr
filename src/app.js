@@ -64,6 +64,7 @@ let motorrelayStatus = "UNKNOWN";
 let motorrelayResponseBuffer = "";
 
 const MAX_RANGE_CM = 280;
+let nearTriggerLatched = false;
 
 // ==========================================
 // HMMd S3KM1110 SENSOR
@@ -168,7 +169,7 @@ sensorParser.on("data", (line) => {
 
     latestDetection = false;
     latestRange = null;
-
+    nearTriggerLatched = false;
     sensorData.humanDetected = false;
     sensorData.rangeCm = null;
     sensorData.lastUpdate = Date.now();
@@ -178,24 +179,76 @@ sensorParser.on("data", (line) => {
 
   const match = line.match(/^Range\s+(\d+)$/);
 
-  if (match) {
+if (match) {
 
     const value = Number(match[1]);
 
-    // Accept only readings up to 280 cm
-    if (value >= 0 && value <= MAX_RANGE_CM) {
+    if (value >= 0 && value <= 280) {
 
-      latestRange = value;
+        latestRange = value;
 
-      sensorData.rangeCm = value;
-      sensorData.lastUpdate = Date.now();
+        sensorData.rangeCm = value;
+        sensorData.lastUpdate = Date.now();
+
+        // Hand gesture detection: 10 cm or closer
+        if (value <= 10 && !nearTriggerLatched) {
+
+            nearTriggerLatched = true;
+
+            triggerPCPower();
+
+        }
+
+        // Reset trigger when hand moves away
+        if (value > 10) {
+
+            nearTriggerLatched = false;
+
+        }
 
     }
 
-    // Ignore readings above 280 cm
-  }
+}
 
 });
+
+function triggerPCPower() {
+
+    if (gpio17Busy) {
+        console.log("[HMMd] GPIO17 busy. Skipping trigger.");
+        return;
+    }
+
+    gpio17Busy = true;
+
+    console.log("[HMMd] Hand detected within 10 cm. Triggering PC power.");
+
+    execFile("pinctrl", ["set", "17", "op", "dh"], (error) => {
+
+        if (error) {
+            gpio17Busy = false;
+            console.error("[GPIO17] HIGH failed:", error);
+            return;
+        }
+
+        setTimeout(() => {
+
+            execFile("pinctrl", ["set", "17", "op", "dl"], (error) => {
+
+                gpio17Busy = false;
+
+                if (error) {
+                    console.error("[GPIO17] LOW failed:", error);
+                    return;
+                }
+
+                console.log("[GPIO17] PC power pulse completed.");
+
+            });
+
+        }, 500);
+    });
+}
 
 
 
@@ -244,39 +297,8 @@ app.get("/gpio17", (req, res) => {
         });
     }
 
-    gpio17Busy = true;
-
-    execFile("pinctrl", ["set", "17", "op", "dh"], (error) => {
-        if (error) {
-            gpio17Busy = false;
-            console.error(error);
-            return res.status(500).json({
-                success: false,
-                error: error.message
-            });
-        }
-
-        setTimeout(() => {
-            execFile("pinctrl", ["set", "17", "op", "dl"], (error) => {
-                gpio17Busy = false;
-
-                if (error) {
-                    console.error(error);
-                    return res.status(500).json({
-                        success: false,
-                        error: error.message
-                    });
-                }
-
-                res.json({
-                    success: true,
-                    gpio: 17,
-                    pulse_ms: 500,
-                    state: "LOW"
-                });
-            });
-        }, 500);
-    });
+    triggerPCPower();
+    
   });
 app.get("/api/netrunner", (req, res) => {
 
