@@ -195,7 +195,7 @@ if (match) {
 
             nearTriggerLatched = true;
 
-            triggerPCPower();
+            //triggerPCPower();
 
         }
 
