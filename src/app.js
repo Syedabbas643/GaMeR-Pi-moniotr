@@ -45,15 +45,15 @@ let espHeartbeatTimer = null;
 let lastEspResponseAt = 0;
 let lastEspHeartbeatAt = 0;
 
-const TANK_MIN_CM = 20;
-const TANK_MAX_CM = 100;
+const TANK_MIN_CM = 25;
+const TANK_MAX_CM = 110;
 const tankReadings = [];
 const MAX_TANK_READINGS = 30;
 
 const motorHistory = [];
 const MAX_MOTOR_HISTORY = 30;
 const MOTOR_START_PERCENTAGE = 20;
-const MOTOR_STOP_PERCENTAGE = 95;
+const MOTOR_STOP_PERCENTAGE = 90;
 let motorSafetyTimer = null;
 let motorRunTimedOut = false;
 const MOTOR_MAX_RUNTIME = 10 * 60 * 1000; // 10 minutes
